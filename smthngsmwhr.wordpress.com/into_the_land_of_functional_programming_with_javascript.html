@@ -1,0 +1,451 @@
+<h1>Contents</h1>
+<br />
+<a href="#enter_javascript" style="font-size:20px;">Enter JavaScript...</a>
+<a href="#running_examples" style="font-size:20px;">Running examples</a>
+<a href="#functions_first_class_citizens" style="font-size:20px;">Functions are "first-class citizens"</a>
+<a href="#closures_and_scopes" style="font-size:20px;">Closures and scopes</a>
+<a href="#partial_application" style="font-size:20px;">Partial Application</a>
+<a href="#memoization" style="font-size:20px;">Memoization</a>
+<a href="#lazy_evaluation" style="font-size:20px;">Lazy evaluation</a>
+<a href="#not_a_functional_language" style="font-size:20px;">Not a functional language but</a>
+
+<a name="enter_javascript"></a>
+<h2>Enter JavaScript...</h2>
+
+JavaScript is an interesting language. Syntactically it resembles C, C++ and Java, but it was also inspired by a functional language: Scheme, which is a dialect of Lisp. That JavaScript has a C-like syntax is largely due to the hype around Java at the time JavaScript was introduced. The language was rushed to the market, leaving in it a few bad design decisions like global variables, 'with' construct, etc. The name of the language itself is a bit misleading: it has nothing to do with Java except for a slight syntactic similarity.
+
+JavaScript still has somewhat bad reputation with some people who do not know the language well, but encountered a few problems when programming for the browser or heard some unfavorable opinions from the people who did so. The language itself, however, had nothing to do with the inconsistent client-side API implementations in different browsers. By the way, there are plenty of client-side libraries such as JQuery that hide the browser differences behind their API and the developer usually does not have to deal with browser specific issues.
+
+Contrary to the popular misconception JavaScript is not used only in browser, it became quite popular recently on the server-side. Why does the language continue to evolve and be successful both on the client and server side? Why more and more people choose JavaScript as the primary language in which they develop software? The examples below will provide a few of the answers to these questions. There are a few very nice design concepts in the language that have been there from the very beginning. JavaScript is flexible and powerful when it comes to working with functions, and this is what we would like to explore here.
+
+<a name="running_examples"></a>
+<h2>Running examples</h2>
+
+To execute examples you can use Firefox and the JavaScript console of the <a href="http://getfirebug.com">Firebug</a> extension for Firefox The code makes use of "console.log" but there is nothing browser-specific in the examples and with minor modifications they can be run on every JavaScript implementation. You may take your time to set up the development environment so that you can play with examples in this article which is the best way to learn.
+
+<a name="functions_first_class_citizens"></a>
+<h2>Functions are "first-class citizens"</h2>
+
+In JavaScript functions are "first-class citizens": they can be passed as arguments and returned from other functions. You do not have to wrap your function in an anonymous class like in Java to do so. To illustrate this, let's add a few useful methods for working with arrays.
+
+[sourcecode language="javascript"]
+function forEach(arr, callback) {
+    for (var i = 0; i < arr.length; i++) {
+        callback(arr[i], i);
+    };
+};
+
+function map(arr, callback) {
+    var result = [];
+    for (var i = 0; i < arr.length; i++) {
+        result.push(callback(arr[i]));
+    };
+    return result;
+};
+
+function reduce(arr, initial, callback) {
+    var accumulated = initial;
+    for (var i = 0; i < arr.length; i++) {
+        accumulated = callback(accumulated, arr[i]);
+    };
+    return accumulated;
+};
+
+//Examples
+var x = [1, 2, 3, 4, 5];
+
+console.log("x = ");
+forEach(x, function (el) {
+    console.log(el);
+});
+
+console.log("squares of x = ");
+forEach(map(x, function (el) {
+    return el * el;
+}), function (el) {
+    console.log(el);
+});
+
+console.log("sum of elements of x = ");
+console.log(reduce(x, 0, function (sum, el) {
+    return sum + el;
+}));
+
+console.log("product of elements of x = ");
+console.log(reduce(x, 1, function (sum, el) {
+    return sum * el;
+}));
+[/sourcecode]
+
+<b>forEach</b> performs an action for each element, <b>map</b> transforms each element and <b>reduce</b> computes an aggregate value for a given array. The action, transformation or aggregation are specified by the <b>callback</b> function.
+
+Even in this simple example it is already worth noting how we can combine two different callbacks with <b>reduce</b> and get completely different results. The code present in <b>reduce</b> is easy to reuse and we reused it twice: the action performed on the element is abstracted away from the way we iterate over the elements.
+
+But this still looks a bit ugly: we have to always pass an array as an argument. In JavaScript it is easy to fix that by adding the methods <b>forEach</b>, <b>map</b> and <b>reduce</b> onto the Array class. To do that we will add functions to the <b>prototype</b> property of the Array. The <b>prototype</b> here is just a special kind of object, properties of which will be available in every created <b>Array</b> instance. For more details look at this <a href="http://javascript.crockford.com/prototypal.html">explanation</a> of prototypal inheritance in JavaScript but in this post you can also view this just like a small magic trick.
+
+[sourcecode language="javascript"]
+Array.prototype.forEach = function(callback) {
+    for (var i = 0, length = this.length; i < length; i++) {
+        callback(this[i], i);
+    };
+};
+
+Array.prototype.map = function(callback) {
+    var result = [];
+    for (var i = 0, length = this.length; i < length; i++) {
+        result.push(callback(this[i]));
+    };
+    return result;
+};
+
+Array.prototype.reduce = function(initial, callback) {
+    var accumulated = initial;
+    for (var i = 0, length = this.length; i < length; i++) {
+        accumulated = callback(accumulated, this[i]);
+    };
+    return accumulated;
+};
+
+//Examples
+var x = [1, 2, 3, 4, 5];
+
+console.log("x = ");
+x.forEach(function (el) {
+    console.log(el);
+});
+
+console.log("squares of x = ");
+x.map(function (el) {
+    return el * el;
+}).forEach(function (el) {
+    console.log(el);
+});
+
+console.log("sum of elements of x = ");
+console.log(x.reduce(0, function (sum, el) {
+    return sum + el;
+}));
+
+console.log("product of elements of x = ");
+console.log(x.reduce(1, function (sum, el) {
+    return sum * el;
+}));
+[/sourcecode]
+
+The latest version of JavaScript already includes the methods <b>forEach</b>, <b>map</b> and <b>reduce</b> for arrays similar to what we just implemented and it would be wise not to override these methods. We will only define them on <b>Array.prototype</b> in case they are not yet there (maybe, for some older browser versions).
+
+[sourcecode language="javascript"]
+if (!Array.prototype.forEach) {
+    Array.prototype.forEach = function(callback) {
+        ...
+    };
+};
+if (!Array.prototype.map) {
+    Array.prototype.map = function(callback) {
+        ...
+    };
+};
+if (!Array.prototype.reduce) {
+    Array.prototype.reduce = function(initial, callback) {
+        ...
+    };
+};
+[/sourcecode]
+
+This shows that we can treat functions as values and use them in conditional statements. Besides this simple example passing functions as arguments is also widely used in client-side JavaScript programming for registering event listeners. We can, for example, add a click listener to body of the current document.
+
+[sourcecode language="javascript"]
+document.body.addEventListener("click", function (event) {
+    console.log("Click handled", event);
+}, false);
+[/sourcecode]
+
+Not only can we pass functions as arguments to other functions it is also possible to return a function from another function.
+
+[sourcecode language="javascript"]
+function op(str) {
+    switch (str) {
+        case '+': return function(x, y) {
+            return x + y;
+        };
+        case '+': return function(x, y) {
+            return x + y;
+        };
+        case '-': return function(x, y) {
+            return x - y;
+        };
+        case '*': return function(x, y) {
+            return x * y;
+        };
+        case '/': return function(x, y) {
+            return x / y;
+        };
+    };
+};
+
+console.log("op('+')(1, 2) = ", op('+')(1, 2));
+console.log("op('-')(5, 3) = ", op('-')(5, 3));
+console.log("op('*')(4, 5) = ", op('*')(4, 5));
+console.log("op('/')(12, 3) = ", op('/')(12, 3));
+[/sourcecode]
+
+This is a bit artificial example, but it illustrates well the general idea that a function can be considered a value.
+
+<a name="closures_and_scopes"></a>
+<h2>Closures and scopes</h2>
+
+There is a scope associated with each function invocation. In fact in JavaScript until the latest versions there were no other scopes, that is, a pair of brackets <b>{}</b> did not define a scope like in other languages such as Java or C. In the latest version it is possible to use <b>let</b> to define a scope, but this will not be covered in the present article.
+
+At the time of its invocation each function captures the variables in the enclosing scope in which this function has been invoked. We say that the function "closes over" the values of the variables in the enclosing scope. This is called "closure." The following counter example demonstrates how the <b>counter</b> variable is "living" in a closure:
+
+[sourcecode language="javascript"]
+function getCounter() {
+    var counter = 0;
+    return {
+        increment: function() {
+            return counter++;
+        },
+        reset: function() {
+            counter = 0;
+        }
+    };
+};
+
+//Getting the counter object
+var counter = getCounter();
+
+//Executing its methods
+console.log(counter.increment());
+console.log(counter.increment());
+console.log(counter.increment());
+counter.reset();
+console.log(counter.increment());
+console.log(counter.increment());
+[/sourcecode]
+
+We return an object from the <b>getCounter</b> method and the variable <b>counter</b> remains accessible for the functions defined in this object.
+
+If we have a few function invocations then we can talk about a chain of scopes formed by a chain of function invocations much like in Scheme.
+
+<a name="partial_application"></a>
+<h2>Partial Application</h2>
+
+Partial application is converting a function of multiple arguments into a function with a fewer number of arguments. Simple example with multiplication:
+
+[sourcecode language="javascript"]
+function multiply(x, y) {
+    return x * y;
+};
+
+function twice(x) {
+    return multiply(x, 2);
+};
+
+console.log("multiply(2, 3) = ", multiply(2, 3));
+console.log("twice(3) = ", twice(3));
+[/sourcecode]
+
+In <b>twice</b> the second argument <b>2</b> is captured and we get a function of one variable <b>x</b> rather than two variables <b>x</b> and <b>y</b>. It is easy to build a generic solution for partially applying a function.
+
+[sourcecode language="javascript"]
+if (!Function.prototype.partial) {
+    Function.prototype.partial = function(argTransformer) {
+        //The current function that we partially apply
+        var f = this;
+        return function() {
+            //Need to convert the function arguments into an array
+            var args = Array.prototype.slice.call(arguments, 0);
+
+            /*
+             * Transforming the arguments and calling the initial function
+             * with the transformed arguments. 'this' here is determined by the context
+             * of invocation of the partially applied function and is not 'f'
+             */
+            return f.apply(this, argTransformer(args));
+        };
+    };
+};
+
+var multiply = function(x, y) {
+    return x * y;
+};
+var double = multiply.partial(function (args) {
+    args.push(2);
+    return args;
+});
+var triple = multiply.partial(function (args) {
+    args.push(3);
+    return args;
+});
+
+console.log("multiply(2, 5) = ", multiply(2, 5));
+console.log("double(3) = ", double(3));
+console.log("triple(4) = ", triple(4));
+[/sourcecode]
+
+Initially we keep the reference to <b>this</b> which references the function for which <b>partial</b> has been invoked. We use this reference later in the anonymous function that we return from <b>partial</b> to execute the original function together with the captured arguments and the arguments passed to the anonymous function at the point of its invocation. <b>argsTransformer</b>, which was the argument to the original <b>partial</b> invocation, combines the passed and captured arguments inside the returned anonymous function. Also, note that <b>this</b> in the anonymous function returned from <b>partial</b> is different from what is stored in the <b>f</b> variable, it is now the object on which the anonymous function was invoked.
+
+<a name="memoization"></a>
+<h2>Memoization</h2>
+
+Memoization is an optimization technique for avoiding expensive calculations in repeated function calls. Simple example:
+
+[sourcecode language="javascript"]
+function expensiveComputation(x) {
+    return x * x;
+};
+
+var cache = {};
+
+function memoizedExpensiveComputation(x) {
+    var result = cache[x];
+
+    if (!result) {
+        result = expensiveComputation(x);
+        cache[x] = result;
+    };
+    return result;
+};
+
+console.log("expensiveComputation(5)", expensiveComputation(5));
+console.log("memoizedExpensiveComputation(5)", memoizedExpensiveComputation(5));
+console.log("memoizedExpensiveComputation(5)", memoizedExpensiveComputation(5));
+[/sourcecode]
+
+<b>memoizedExpensiveComputation</b> caches the values that were already computed for particular arguments and returns these values directly from the cache avoiding calling <b>expensiveComputation</b>.
+
+With JavaScript it is easy to build a generic solution for function memoization.
+
+[sourcecode language="javascript"]
+function memoize(func, host, hash) {
+    //By default memoize a function on the window object
+    var host = host || window,
+        hash = hash || {},
+        original = host[func];
+    //Only functions can be memoized
+    if (!host[func] || !(host[func] instanceof Function)) {
+        throw "Can memoize only a function or function is not defined in host";
+    };
+    //Redefine the function on the host object
+    host[func] = function() {
+        //The key in the cash is a JSON representation of arguments
+        var jsonArguments = JSON.stringify(arguments);
+        //If the value has not yet been computed
+        if (!hash[jsonArguments]) {
+            //Calling the original function with the arguments provided to host[func],
+            //'this' in the original function will also be the same as in the redefined function in order to handle
+            //host[func].call and host[func].apply
+            hash[jsonArguments] = original.apply(this, Array.prototype.slice.call(arguments, 0));
+        };
+        return hash[jsonArguments];
+    };
+};
+
+function fib(num) {
+    return (num < 2) ? num : this.fib(num - 1) + this.fib(num - 2);
+};
+memoize("fib");
+
+console.log("fib(5) =", fib(5));
+console.log("fib(10) =", fib(10));
+console.log("fib(11) =", fib(11));
+[/sourcecode]
+
+First we check that <b>host</b> contains the function, name of which was passed as the first argument to <b>memoize</b>. If it does, we keep the reference to this function and then redefine the function <b>host[func]</b> just like in the simple example before. If the computed value can be looked up in the cache, than we return it without actually calling the original function, otherwise we call the original function and store the result in the cache. The key in the cache is the JSON representation of the arguments passed to the redefined <b>host</b> function. We have to call <b>Array.prototype.slice</b> on the arguments to convert them into an array object (a flaw in the design of JavaScript - <b>arguments</b> passed to the function is an array-like object, not an array) and then we call the original function <b>original</b> with <b>apply</b> on <b>this</b> which is defined by the invocation context of the redefined <b>host[func]</b>. We pass to the original function all the arguments that were passed to the redefined version of it. For user of the API using the redefined function is as transparent as using the original one. The call to <b>memoize</b> just redefines the function so that it starts returning already computed values from a cache.
+
+<a name="lazy_evaluation"></a>
+<h2>Lazy evaluation</h2>
+
+With JavaScript it is also relatively easy to implement lazy evaluation and lazy streams. Each stream consists of two parts: the head and the tail. The tail can be an actual element or a promise to compute the element. Execution of this promise to compute an element can be omitted at the point of defining the stream and can be done later. In JavaScript such a promise can be implemented as a function.
+
+[sourcecode language="javascript"]
+function node(head, tail) {
+    return [head, tail];
+};
+
+function head(stream) {
+    return stream[0];
+};
+
+function tail(stream) {
+    var tail = stream[stream.length - 1];
+    return (tail instanceof Function) ? tail() : tail;
+};
+
+function drop(stream) {
+    var h = head(stream);
+    var t = tail(stream);
+    stream[0] = t ? t[0] : null;
+    stream[1] = t ? t[1] : null;
+    return h;
+};
+
+function iterate(stream, callback, limit) {
+    while (head(stream) && ((undefined == limit) || (limit > 0))) {
+        limit && limit--;
+        callback(drop(stream));
+    };
+};
+
+function show(stream, limit) {
+    iterate(stream, function (x) {
+        console.log(x);
+    }, limit);
+};
+
+//Examples
+function upto(from, to) {
+    return (from > to) ? null : node(from, function() {
+        return upto(from + 1, to);
+    });
+};
+function upfrom(start) {
+    return node(start, function() {
+        return upfrom(start + 1);
+    });
+};
+
+console.log("upto:");
+show(upto(3, 6));
+
+console.log("upfrom:");
+show(upfrom(7), 10);
+[/sourcecode]
+
+The key part in this code is the <b>tail</b> function where we check whether <b>tail</b> is a promise rather than an actual element (that is, a function) and execute this promise if needed. Then defining each particular lazy stream is as easy as recursively defining a promise for the next element.
+
+It is further possible to "objectify" the lazy stream code so that each stream represents an object and add the ability to filter, transform and unite streams. The full implementation is available <a href="https://github.com/antivanov/Higher-Order-JavaScript/blob/master/src/streams/lazyStream.js">here</a>
+
+<a name="not_a_functional_language"></a>
+<h2>Not a functional language but</h2>
+
+Despite all the flexibility and ease of working with functions JavaScript is not a functional language. It has mutable shared state and the notion of the time of execution: if one statement precedes another it is executed earlier. Also there is no tail call recursion optimization in JavaScript, so the following code will not be optimized:
+
+[sourcecode language="javascript"]
+function factorial(number) {
+    if (0 == number) {
+        return 1;
+    };
+    return number * factorial(number - 1);
+};
+
+console.log("factorial(10) = ", factorial(10));
+[/sourcecode]
+
+While JavaScript is still not functional, the excellent support for functions helps a lot by adding the necessary flexibility and power to the language and in part explains the popularity of JavaScript both on the client and the server side.
+
+More working examples like in this post can be found on github.com at <a href="https://github.com/antivanov/Higher-Order-JavaScript">"Higher-Order JavaScript"</a> The code for this project was inspired by the blog series about <a href="http://blog.grayproductions.net/categories/higherorder_ruby">"Higher-Order Ruby"</a> and the <a href="http://hop.perl.plover.com/">"Higher-Order Perl"</a> book. If you also like Ruby, please, visit the blog <a href="http://blog.grayproductions.net">http://blog.grayproductions.net</a> and consider buying the book <a href="http://hop.perl.plover.com/">http://hop.perl.plover.com/</a> if you want to learn some good Perl.
+
+<h2>Links</h2>
+
+<a href="http://en.wikipedia.org/wiki/Scheme_(programming_language)" title="Scheme">1. Scheme programming language</a>
+<a href="http://getfirebug.com" title="Firebug">2. Firebug</a>
+<a href="http://javascript.crockford.com/prototypal.html" title="JavaScript prototypal inheritance">3. JavaScript prototypal inheritance</a>
+<a href="https://developer.mozilla.org/en-US/docs/DOM/element.addEventListener" title="addEventListener">4. addEventListener</a>
+<a href="http://en.wikipedia.org/wiki/Partial_application" title="Partial Application">5. Partial Application</a>
+<a href="http://en.wikipedia.org/wiki/Memoization" title="Memoization">6. Memoization</a>
+<a href="http://en.wikipedia.org/wiki/Tail_call" title="Tail call">7. Tail call</a>
+<a href="http://en.wikipedia.org/wiki/Lazy_evaluation" title="Lazy evaluation">8. Lazy evaluation</a>
+<a href="https://github.com/antivanov/Higher-Order-JavaScript" title="&amp;Higher-Order JavaScript&amp;">9. "Higher-Order JavaScript"</a>
+<a href="http://blog.grayproductions.net/categories/higherorder_ruby" title="&amp;Higher-Order Ruby&amp; blog series">10. "Higher-Order Ruby" blog series</a>
+<a href="http://hop.perl.plover.com/" title="&amp;Higher-Order Perl&amp;">11. "Higher-Order Perl" book</a>

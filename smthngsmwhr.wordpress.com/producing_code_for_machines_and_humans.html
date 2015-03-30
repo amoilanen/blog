@@ -1,0 +1,89 @@
+<h1>Contents</h1>
+<br />
+<a href="#code" style="font-size:20px;">Code</a>
+<a href="#efficiency" style="font-size:20px;">Efficiency</a>
+<a href="#abstraction" style="font-size:20px;">Abstraction</a>
+<a href="#requirements" style="font-size:20px;">Requirements for languages</a>
+<a href="#looking_to_future" style="font-size:20px;">Future</a>
+
+<a name="code"></a>
+<h2>Code</h2>
+
+Code (or "source code") is a set of instructions that can be executed automatically by a machine. It is usually written in a programming language and stored in source files in the textual form. Before it is automatically executed it may be first transformed (compiled) into a format convenient for the target machine or it can be executed right away (interpreted).
+
+<a name="efficiency"></a>
+<h2>Efficiency</h2>
+
+Efficient code from the point of view of a machine is code that uses as few resources as possible to execute: memory, network bandwidth, processor time, battery, etc. When deployed inefficient code often costs extra money because it consumes unnecessary resources. Hence we should strive to write efficient code.
+
+But costs associated with code are not only limited to consumed machine resources. Code needs to be maintained and changed throughout its lifetime by humans. And humans have a rather different set of requirements for code than machines. Efficient code for humans is the code that can be quickly understood and easily changed. 
+
+Problems of efficiency may arise when a program gets really large and complex with many concepts, rules and flows, because humans have a rather limited attention span, short-term memory, typing speed, etc. In order for a program to be maintainable at all it needs to be adapted to these limitations. 
+
+<a name="abstraction"></a>
+<h2>Abstraction</h2>
+
+Another area in which humans are remarkably different than machines is the ability to abstract and categorize things and work simultaneously at different levels of abstraction. For example, when we drive a car we do not need to know how the engine works, everything we need is just a steering wheel, a dashboard with measurements, two pedals, etc. In other words, we only need to have an interface through which we can interact with a car. Likewise, when we see a traffic jam on a map we are not interested in how a car is actually driven by a driver, we are interested in how many cars are now standing in our way and do not allow us to get where we want to. That's an example of abstraction: unnecessary details are stripped out and disregarded in order to get the whole picture in a given context to solve specific problems. 
+
+Machines are not really good at this type of thinking. It turns out to be relatively hard to automatically decide what to abstract away for a given task. Ultimately machines always deal with memory bits and electrical signals and only with those abstractions that we explicitly supply them with via the source code.
+
+<a name="requirements"></a>
+<h2>Requirements for languages</h2>
+
+What implications do the outlined above human limitations and the extra ability for abstraction have for code? 
+
+To match human perception and the way of thinking code should also be written at a specific level of abstraction that is necessary for solving a particular problem. For example, in a web store application an engineer would like to work with such entities as "shopping cart", to be able to do a "check out", etc. The programming language should allow to build such abstractions in the code, otherwise the software will be really hard to maintain or it will be unmaintainable at all. 
+
+Building such abstractions means additional resources required from a machine to deal with them, and hence additional machine-related costs. Of course, these costs are now balanced by lowered human-related costs which can be quite high because it takes a lot of money to pay software engineers. And we would always like to lower the overall costs, not just the machine-related costs.
+
+This leads to new requirements for programming languages, especially as the problems being solved and applications being developed get more and more complex and machines more powerful. Languages should allow for humans to build abstractions in code easily and in a manner efficient for a machine. 
+
+If we look at the history of programming languages then we see a clear trend: as the time goes the languages become more high-level and more powerful from the perspective of solving a problem fast, but less efficient from the perspective of a machine. First it was machine code, then Assembler, then high-level languages such as Algol, then C++ and object-oriented languages, then Java and garbage collection, then Ruby and domain-specific languages, and the trend still continues to the present moment. 
+
+Nowadays building better abstractions with a language means building domain-specific languages better. Domain-specific language is just a small language built to solve a particular problem. In the case with a web store this may be a language that has such notions as "payment method", "order", "discount", etc. which allow you to easily build rules and flows involving them. By they way, the main advantage of Ruby, while it may be slow to execute and more resource-consuming, is the ease of creating domain-specific languages. One such language, Ruby on Rails was very successful precisely because it allowed to build web applications faster and easier than its lower-level competitors.
+
+<a name="looking_to_future"></a>
+<h2>Future</h2>
+
+Now and in the foreseeable future in order to solve some relatively complex problem first a domain-specific language for solving this problem should be established in which this problem is easy to address. Hence the trend is to more machine-inefficient but more abstract and high level applications, ones that are built using domain-specific languages.
+
+And now here are some of the yet not fully answered questions:
+
+<ul>
+
+<li>
+What are most appropriate building block for abstractions, objects or functions? This is where the whole debate of object-oriented programming vs. functional programming comes in.
+</li>
+
+<li>
+Is it possible to build self-evolving domain-specific languages and automatically generate domain-specific languages like Ruby on Rails for a specific problem? Various computer-aided software engineering tools and UML tried to solve this problem but none of them managed to completely do it. And a lot of human participation is still usually needed. Moreover, sometimes generated code is really hard or impossible to support for humans.
+</li>
+
+<li>
+Next machine performance improvements will likely come from the increase in the number of parallel processors and distributed computations. How to best abstract away for humans the complex details underneath such computations? Clearly most of the present-day programming languages were not developed for such an abstraction. This makes programming using them in the future potentially very complex and unproductive. As one such example Java concurrency API is really difficult to use and easy to misuse. There are attempts to address this problem, for example, take a look at the Clojure programming language.
+</li>
+
+<li>
+What other formats for storing and viewing code can be there? Is it really best to store it as text files? It is hard to make purely visual languages as they often do not easily allow the desired level of customization and flexibility in solving a problem. Normally we would also sometimes access the text representation of the code being generated from the visual representation.
+</li>
+
+</ul>
+
+All the above being said, it really comes down to this: we just have to remember that the code is written both for machines and humans, and they have different requirements for efficiency which can be in conflict with each other. We have to balance these requirements: the right level of abstraction for humans and the hardware resource consumption for machines.
+
+<h2>Links</h2>
+<a href="http://en.wikipedia.org/wiki/Interpreted_language" title="Interpreted languages">Interpreted languages</a>
+<a href="http://en.wikipedia.org/wiki/Compiled_language" title="Compiled languages">Compiled languages</a>
+<a href="http://en.wikipedia.org/wiki/Interface_(computing)" title="Interface">Interface</a>
+<a href="http://en.wikipedia.org/wiki/Machine_code" title="Machine code">Machine code</a>
+<a href="http://en.wikipedia.org/wiki/Assembler" title="Assembler">Assembler</a>
+<a href="http://en.wikipedia.org/wiki/ALGOL" title="ALGOL">ALGOL</a>
+<a href="http://en.wikipedia.org/wiki/C%2B%2B" title="C++">C++</a>
+<a href="http://en.wikipedia.org/wiki/Java_(programming_language)" title="Java">Java</a>
+<a href="http://en.wikipedia.org/wiki/Ruby_(programming_language)" title="Ruby">Ruby</a>
+<a href="http://rubyonrails.org/" title="Ruby on Rails">Ruby on Rails</a>
+<a href="http://en.wikipedia.org/wiki/Unified_Modeling_Language" title="UML">UML</a>
+<a href="http://en.wikipedia.org/wiki/Computer-aided_software_engineering" title="Computer-Aided Software Engineering">Computer-Aided Software Engineering</a>
+<a href="http://www.infoq.com/presentations/Are-We-There-Yet-Rich-Hickey" title="Are we there yet? (Rich Hickey)">Are we there yet? (Rich Hickey)</a>
+<a href="http://www.clojure.org" title="Clojure programming language">Clojure programming language</a>
+<a href="http://en.wikipedia.org/wiki/Human%E2%80%93computer_interaction" title="Human-computer interaction">Human-computer interaction</a>

@@ -1,0 +1,211 @@
+<h1>Contents</h1>
+<br />
+<a href="#ruby" style="font-size:20px;">Learn You a Bit of Ruby</a>
+<a href="#routine" style="font-size:20px;">Simple Routine</a>
+<a href="#automation" style="font-size:20px;">Automation</a>
+<a href="#alternatives" style="font-size:20px;">Alternatives to Ruby</a>
+<a href="#examples" style="font-size:20px;">More Examples of Automation</a>
+<a href="#studying" style="font-size:20px;">Studying Ruby Further</a>
+
+<a name="ruby"></a>
+<h2>Learn You a Bit of Ruby</h2>
+
+Even if you are not a software developer you absolutely have to sometime give <a href="http://www.ruby-lang.org/en/" title="Ruby">Ruby</a> a try. It is a nice language geared towards increasing programmer's productivity and is a lot like a Swiss Army Knife of the world of programming: in many situations you will find that Ruby is the right tool for achieving what you need. 
+
+I mainly use Ruby for rapid prototyping of new features, automation of routine administrative tasks and for test automation but Ruby is not limited to this. For example, a very popular area for Ruby is Web development, where the <a href="http://rubyonrails.org/" title="Ruby-on-Rails">Ruby-on-Rails</a> framework is widely used.
+
+There are, of course, as it is the case with any language, areas for which Ruby and associated with it libraries and frameworks are not the best choice. Examples of this are performance-critical low level applications such as drivers or highly scalable powerful server-side architectures. We just have to keep in mind that not just Ruby but any tool is best used in a particular context and has its natural limitations and imperfections as well as advantages.
+
+Learning Ruby is quite pleasant and surprisingly easy and you will quickly be able to achieve in 10 lines of code what seasoned Java developers cann't do in 100 lines. Chances are that Ruby will also give you a better understanding of programming languages and algorithms in general.
+
+<a name="routine"></a>
+<h2>Simple Routine</h2>
+
+My first experience with Ruby was with automating tasks that I had to routinely perform on my machine. Let's now consider one such simple task:
+
+On my computer I have quite a few directories with photos but they are a bit unorganized. For each event (like "New Year Celebration") I have a directory with photos which in turn can contain subdirectories with photos that can contain other subdirectories with photos, etc. Mainly this is because I make pictures from different devices but also sometimes I select a few photos and put them in a separate subdirectory so that I can send them to a friend. 
+
+Now I would like to organize these photos in such a way that the directory structure is flattened: only the top level directories corresponding to events are left, all the photos from the nested subdirectories are copied to these top level directories and then the nested subdirectories themselves are removed.
+
+So, how do we go about such a routine task? Of course, we can do all the actions manually and perform roughly the same routine procedure involving moving files and removing directories for 30 or so top level event directories. However, this will be extremely boring, tiresome, unproductive, error-prone and wrong. Such routines should not be left to humans, they should be automated and done by a machine. Let's use the Swiss Army Knife - Ruby to automate this.
+
+<a name="automation"></a>
+<h2>Automation</h2>
+
+Some familiarity with Ruby would not be excessive here, but it's OK if you don't understand everything in the code listings as I will try to explain the code as we go. However, if you are new to programming in general or to Ruby, feel free to follow the following nice 20 minutes <a href="http://www.ruby-lang.org/en/documentation/quickstart/" title="Ruby tutorial">Ruby tutorial</a>. At this point you can also try to install Ruby and familiarize yourself with how to create and run simple scripts if you want to follow along and play with the provided code a bit.
+
+All begins fairly straightforward. We import the libraries that we will need for our simple script.
+
+[sourcecode language="Ruby"]
+require 'find'
+require 'fileutils'
+require 'pathname'
+[/sourcecode]
+
+Then we write a procedure that will perform some action passed as a block for each first level subdirectory in a given directory:
+
+[sourcecode language="Ruby"]
+def for_each_child_directory(root_dir)
+  return if !block_given?
+  old_dir = Dir.pwd
+  Dir.chdir root_dir
+  Dir.glob("*") do |file_path|
+    if File.directory?(file_path)
+      yield file_path
+    end
+  end
+  Dir.chdir old_dir
+end
+[/sourcecode]
+
+This procedure can now be called as follows:
+
+[sourcecode language="Ruby"]
+  for_each_child_directory("/home/anton") do |dir|
+    puts "Found first level directory #{dir}"
+  end
+[/sourcecode]
+
+where 
+
+[sourcecode language="Ruby"]
+  do |dir|
+    puts "Found first level directory #{dir}"
+  end
+[/sourcecode]
+
+is a block of code that is passed to the method <b>for_each_child_directory</b> in addition to the explicit parameter <b>root_dir</b>. You can think of this block as a special kind of hidden parameter which contains something that can be executed and to which we can pass parameters of its own with the following construct:
+
+[sourcecode language="Ruby"]
+  yield file_path
+[/sourcecode]
+
+Now, let's implement other procedures.
+
+[sourcecode language="Ruby"]
+def move_all_new_files_from_subdirectories_to(dir)
+  Find.find(dir) do |file_path|
+    already_exists = File.exist?(File.join(dir, Pathname.new(file_path).basename))
+    if !File.directory?(file_path) && !already_exists
+      FileUtils.mv(file_path, dir) 
+    end
+  end
+end
+[/sourcecode]
+
+This procedure moves all the files from the subdirectories to the root directory which is specified as the parameter <b>dir</b>. For each file in a subdirectory we move it to the root directory only if it is not a directory and it does not already exist there.
+
+Once the files have been moved to the root we can remove the empty subdirectories of the root directory <b>dir</b>:
+
+[sourcecode language="Ruby"]
+def remove_all_subdirectories_in(dir)
+  for_each_child_directory(dir) do |dir|
+    FileUtils.rm_rf dir
+  end
+end
+[/sourcecode]
+
+And now we bind the procedures that we defined so far together and make sure that we can call the script from the console:
+
+[sourcecode language="Ruby"]
+def flatten_directory(dir)
+  move_all_new_files_from_subdirectories_to(dir)
+  remove_all_subdirectories_in(dir)
+end
+
+def flatten_child_directories(root_dir)
+  for_each_child_directory(root_dir) do |dir|
+    flatten_directory dir
+  end
+end
+
+flatten_child_directories(ARGV[0] || ".")
+[/sourcecode]
+
+<b>ARGV[0]</b> is the first argument that we pass to the script from the console when we call it like this:
+
+<b>ruby flatten_directories.rb "/home/anton/photos"</b>
+
+The whole script can be found <a href="https://github.com/antivanov/misc/blob/master/Ruby/flatten_directories.rb">here</a>
+
+<a name="alternatives"></a>
+<h2>Alternatives to Ruby</h2>
+
+There are, of course, a number of alternatives for automating the task above or similar tasks. For example, we could have used Bash for Linux or PowerShell for Windows. The advantage of such tools is that they are native to the platform for which you implement automation. However, their huge disadvantage is poor scalability (it is hard to write large scripts) and maintainability. Bash has a very terse and cryptic syntax that is hard to learn and use unless you write Bash scripts every day. Another thing is that what you learn about Bash is specific for Bash and you cannot really reuse it anywhere else outside of Bash scripting. So you invest quite a lot of time into learning a programming language that has a very limited usage: administrative scripting on a specific platform. Often the Bash scripts written some time ago are hard to read and understand, especially this is true for large scripts (&gt;= 100 lines of code). My advice would be to use Bash only for really simple scripts and do not allow your scripts grow to more than 10-15 lines. Otherwise Ruby (often with some Bash or PowerShell commands mixed into the script) will do a much better job.
+
+Let's list the main advantages of using Ruby to automate routine tasks:
+
+<ul>
+
+<li>Availability of many good libraries for easy networking and file system access
+
+The used 'fileutils' library provides a good example of this.
+</li>
+
+<li>Minimum of dependency on the underlying platform
+
+The written script is cross-platform, it can be executed both on Windows and Linux. In most scripts, however, there may be calls specific for the underlying operating system, for example:
+
+[sourcecode language="Ruby"]
+def download(file_URL, file_name)
+  system("wget -c \"#{file_URL}\" -O \"#{file_name}\"")
+end
+[/sourcecode]
+
+Here we are using the <a href="http://www.gnu.org/software/wget/" title="wget">wget</a> utility to download a file. Unless there is a <b>wget</b> available the script will not run. So the cross-platformness has its limits.
+</li>
+
+<li>Seamless integration with the native commands
+
+It is possible to resort to Bash in a Ruby script by using the methods <b>system</b> or <b>IO.popen</b>. However, it is much nicer to glue the low level commands with Ruby rather than with pure Bash. 
+</li>
+
+<li>Ruby allows to write procedural style simple scripts, but you can also introduce objects and additional structure to your scripts as you go.
+
+The script above is written in the procedural style in which Ruby allows you to program, but should you find yourself in a need to write a larger script you can easily use objects and modules as in any Ruby program and this will give you more structure and make it easier to maintain and understand the script.
+</li>
+
+</ul>
+
+<a name="examples"></a>
+<h2>More Examples of Automation</h2>
+
+Here are a few other examples of automation:
+
+<ul>
+
+<li><a href="https://github.com/antivanov/misc/blob/master/Ruby/cd_grabber.rb" title="CD grabber">CD grabber</a>
+
+Grabs CD tracks into MP3 with an option to fetch information about tracks from <a href="http://www.amazon.com" title="Amazon.com">Amazon.com</a> or from the local file system.
+</li>
+
+<li><a href="https://github.com/antivanov/misc/blob/master/Ruby/apartment_watcher.rb" title="Apartment watcher">Apartment watcher</a>
+
+Checks the availability of apartments and notifies via e-mail when a new apartment with the specified search options becomes available.
+</li>
+
+<li><a href="https://github.com/antivanov/rpodder" title="Podcast client">Podcast client</a>
+
+Downloads podcasts from a given URL to the local machine.
+</li>
+
+</ul>
+
+<a name="studying"></a>
+<h2>Studying Ruby Further</h2>
+
+You will not need to know advanced Ruby to write simple scripts like the one in the present article and <a href="http://pragprog.com/book/bmsft/everyday-scripting-with-ruby" title="Everyday Scripting with Ruby: for Teams, Testers, and You">Everyday Scripting with Ruby: for Teams, Testers, and You</a> will provide a nice start if you are not a programmer. 
+
+But if you are a novice Ruby programmer and would like to study Ruby more like a programming language from a perspective of a developer you can read <a href="http://beginningruby.org/" title="Beginning Ruby">Beginning Ruby</a>.  
+
+Ruby is a generic programming language well-suited for a number of tasks. One of them is automation. So, next time when you are faced with some routine administrative task on your machine why don't you learn a bit of Ruby and give it a try to help you automate it? 
+
+<h2>Links</h2>
+
+<a href="http://www.ruby-lang.org/en/" title="Ruby language">Ruby language</a>
+<a href="http://www.ruby-lang.org/en/documentation/quickstart/" title="Ruby in 20 minutes">Ruby in 20 minutes (tutorial)</a>
+<a href="http://pragprog.com/book/bmsft/everyday-scripting-with-ruby" title="Everyday Scripting with Ruby: for Teams, Testers, and You">Everyday Scripting with Ruby: for Teams, Testers, and You (book)</a>
+<a href="http://beginningruby.org/" title="Beginning Ruby">Beginning Ruby (book)</a>
+<a href="http://www.barnesandnoble.com/w/pro-bash-programming-chris-johnson/1102592577" title="Pro Bash Programming: Scripting the Linux Shell">Pro Bash Programming: Scripting the Linux Shell (book)</a>
+<a href="http://powershell.org/" title="Windows PowerShell">Windows PowerShell</a>
+<a href="http://rubyonrails.org/" title="Ruby-on-Rails">Ruby-on-Rails</a>

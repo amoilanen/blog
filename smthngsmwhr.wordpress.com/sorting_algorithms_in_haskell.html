@@ -1,0 +1,184 @@
+<h1>Contents</h1>
+<br />
+<a href="#haskell" style="font-size:20px;">Why Haskell?</a>
+<a href="#quicksort" style="font-size:20px;">Quicksort</a>
+<a href="#mergesort" style="font-size:20px;">Mergesort</a>
+<a href="#bubble_sort" style="font-size:20px;">Bubble Sorting</a>
+
+<a name="haskell"></a>
+<h2>Why Haskell?</h2>
+
+Recently I decided to learn a bit of Haskell. Having programmed a bit in Clojure and having some familiarity with Common Lisp and Scheme I always wanted to take a closer look at Haskell. 
+
+What distinguishes Haskell is that it is a purely functional language, without state and variables. As a result statements in it are very close to mathematical expressions.
+
+While reading <a href="http://learnyouahaskell.com/" title=" Learn You a Haskell book">Learn You a Haskell</a> book I sat down the second day's evening behind my computer to write some simple sorting algorithms and was pleasantly surprised with the result: it was really easy and fast to implement these algorithms in Haskell, and the code reads almost like the definitions of the algorithms itself.
+
+While I am still learning and my Haskell code may still be far from perfect I just wanted to share these first results and maybe convince you to also take a look at Haskell. If you are not comfortable with the syntax, please, refer to the first chapters of the <a href="http://learnyouahaskell.com/" title=" Learn You a Haskell book">Learn You a Haskell</a> book. Some prior Haskell knowledge may be beneficial for reading this article although I try to explain the syntax and the language constructs a bit in the context of the provided examples.
+
+So, let's go over some of the best known classical sorting algorithms and try to use Haskell to implement them.
+
+<a name="quicksort"></a>
+<h2>Quicksort</h2>
+
+Let's define the function <b>quicksort</b> that will implement the <a href="http://en.wikipedia.org/wiki/Quicksort" title="Quicksort">Quicksort</a> algorithm.
+
+Haskell is a statically typed language. When a function library is compiled, compiler tries to infer types where it can and we can also help it by specifying them explicitly.
+
+[sourcecode]
+quicksort :: (Ord a) => [a] -> [a]
+[/sourcecode]
+
+The function <b>quicksort</b> takes a list <b>[a]</b> of some type <b>a</b>, such that elements of <b>a</b> can be compared with each other (this is specified by using the <b>(Ord a)</b> guard). And then the function returns a list of the same type <b>[a]</b>.
+
+The quicksort algorithm itself is really simple:
+
+1. We pick some element x in the list
+
+2. The rest of the elements in the list are separated into two lists: elements smaller than x and elements greater than x
+
+3. The algorithm is applied recursively to these lists and then the list with smaller elements, the selected element and the list of greater elements are concatenated together and the sorting is done
+
+Here is how we would implement this in Haskell:
+
+[sourcecode]
+quicksort (x:xs) = quicksort [y | y <- xs, y <= x] ++ [x] ++ quicksort [y | y <- xs, y > x]
+[/sourcecode]
+
+<b>quicksort</b> takes an argument <b>(x:xs)</b> which is a list consisting of the first element <b>x</b> and the rest of the list <b>xs</b>. Then we apply list comprehension <b>[y | y &lt;- xs, y &lt;= x]</b> to get a list of all the elements in the list <b>xs</b> that are smaller or equal than <b>x</b>. Then we concatenate the resulting list with a single element list <b>[x]</b> and the list of elements that are greater than <b>x</b>.
+
+So the recursion on which the Quicksort algorithm is built is now defined by the function <b>quicksort</b>, but we still need to finish the recursion at some point, so we need to specify the condition when the recursion ends. This is also easily done in Haskell by augmenting the definition of the function <b>quicksort</b> with one more rule:
+
+[sourcecode]
+quicksort [] = []
+[/sourcecode]
+
+Thus the algorithm applied on an empty list will return an empty list. 
+
+Combining everything together we get the complete Quicksort implementation in Haskell:
+
+[sourcecode]
+quicksort :: (Ord a) => [a] -> [a]
+quicksort [] = []
+quicksort (x:xs) = quicksort [y | y <- xs, y <= x] ++ [x] ++ quicksort [y | y <- xs, y > x]
+[/sourcecode]
+
+Note, how mathematically pure this implementation looks. No variables, no order in which the steps of the algorithm should be performed, just the specification of how the algorithm should work.
+
+<a name="mergesort"></a>
+<h2>Mergesort</h2>
+
+Mergesort is a little more complicated to implement. The algorithm as follows:
+
+1. List is split into two parts
+
+2. Two parts are sorted by the algorithm
+
+3. The sorted parts are merged by a special merging procedure for sorted lists
+
+Let's first define how we split a list into two parts:
+
+[sourcecode]
+mergesort'splitinhalf :: [a] -> ([a], [a])
+mergesort'splitinhalf xs = (take n xs, drop n xs)
+    where n = (length xs) `div` 2 
+[/sourcecode]
+
+The function <b>mergesort'splitinhalf</b> returns a pair of arrays into which the original array was split.
+<b>n</b> is equal to the half of the length of the array, and then we use the standard functions <b>take</b> and <b>drop</b>
+to get the first <b>n</b> elements of the list <b>take n xs</b> and the rest of the list after those first elements <b>drop n xs</b>.
+
+Let's now define a function for merging two sorted arrays:
+
+[sourcecode]
+mergesort'merge :: (Ord a) => [a] -> [a] -> [a]
+mergesort'merge [] xs = xs
+mergesort'merge xs [] = xs
+mergesort'merge (x:xs) (y:ys)
+    | (x < y) = x:mergesort'merge xs (y:ys)
+    | otherwise = y:mergesort'merge (x:xs) ys
+[/sourcecode]
+
+The function receives two arrays and produces one array of the same type. The algorithm for merging:
+
+1. If the first list is empty <b>[]</b> then the result of the merge is the second list <b>xs</b>
+
+2. If the second list is empty <b>[]</b> then the result of the merge is the first list <b>xs</b>
+
+3. Otherwise we compare the first elements of the lists and append with the colon <b>:</b> function the least of them to the new list which is the result of merging the remaining two lists
+
+Now that we have defined the functions <b>mergesort'splitinhalf</b> and <b>mergesort'merge</b> we can easily define the function <b>mergesort</b>.
+
+[sourcecode]
+mergesort :: (Ord a) => [a] -> [a]
+mergesort xs 
+    | (length xs) > 1 = mergesort'merge (mergesort ls) (mergesort rs)
+    | otherwise = xs
+    where (ls, rs) = mergesort'splitinhalf xs
+[/sourcecode]
+
+If the length of the list is greater than 1 then we do the standard step of the algorithm. Otherwise the list with the length of 1 is already sorted (the condition for ending the recursion). 
+
+The code reads exactly the same as the textual description of the algorithm given earlier but now this is a formal and shorter specification.
+
+The complete code for Mergesort:
+
+[sourcecode]
+mergesort'merge :: (Ord a) => [a] -> [a] -> [a]
+mergesort'merge [] xs = xs
+mergesort'merge xs [] = xs
+mergesort'merge (x:xs) (y:ys)
+    | (x < y) = x:mergesort'merge xs (y:ys)
+    | otherwise = y:mergesort'merge (x:xs) ys
+
+mergesort'splitinhalf :: [a] -> ([a], [a])
+mergesort'splitinhalf xs = (take n xs, drop n xs)
+    where n = (length xs) `div` 2 
+
+mergesort :: (Ord a) => [a] -> [a]
+mergesort xs 
+    | (length xs) > 1 = mergesort'merge (mergesort ls) (mergesort rs)
+    | otherwise = xs
+    where (ls, rs) = mergesort'splitinhalf xs
+[/sourcecode]
+
+<a name="bubble_sort"></a>
+<h2>Bubble Sorting</h2>
+
+And now the Bubble sorting algorithm: we change places in pairs of elements while we can do so, that is, while there is still a pair or elements <b>(x, y)</b> such as <b>x &gt; y</b>.
+
+Let's first define the function that will go through all the elements in a list and exchange pairs of elements
+when it sees that the sorting order is wrong.
+
+[sourcecode]
+bubblesort'iter :: (Ord a) => [a] -> [a]
+bubblesort'iter (x:y:xs)
+    | x > y = y : bubblesort'iter (x:xs)
+    | otherwise = x : bubblesort'iter (y:xs)
+bubblesort'iter (x) = (x)
+[/sourcecode]
+
+Then we just need to apply this function <b>n</b> times - the length of the list that should be sorted.
+
+[sourcecode]
+bubblesort' :: (Ord a) => [a] -> Int -> [a]
+bubblesort' xs i 
+    | i == (length xs) = xs
+    | otherwise = bubblesort' (bubblesort'iter xs) (i + 1) 
+
+bubblesort :: (Ord a) => [a] -> [a]
+bubblesort xs = bubblesort' xs 0
+[/sourcecode]
+
+We do this by defining a function <b>bubblesort'</b> that takes two arguments: the current list and the number of the current iteration <b>i</b>.
+
+Essentially what we are doing here, is transforming iteration into a recursion, so that Bubble sorting becomes a recursive algorithm.
+
+<h2>Links</h2>
+
+<a href="https://github.com/antivanov/misc/blob/master/Haskell/sorting_algorithms.hs" title="Source code">Source code</a>
+<a href="http://www.haskell.org/haskellwiki/Haskell" title="Haskell">Haskell</a>
+<a href="http://learnyouahaskell.com/" title=" Learn You a Haskell book">Learn You a Haskell book</a>
+<a href="http://en.wikipedia.org/wiki/Bubble_sort" title="Bubble sorting">Bubble sorting</a>
+<a href="http://en.wikipedia.org/wiki/Merge_sort" title="Mergesort">Mergesort</a>
+<a href="http://en.wikipedia.org/wiki/Quicksort" title="Quicksort">Quicksort</a>

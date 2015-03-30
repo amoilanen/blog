@@ -1,0 +1,666 @@
+<h1>Contents</h1>
+<br />
+<a href="#javascript" style="font-size:20px;">Why JavaScript Isn't Enough?</a>
+<a href="#javascriptexample" style="font-size:20px;">Example JavaScript Program: Dijkstra's Algorithm</a>
+<a href="#coffeescript" style="font-size:20px;">CoffeeScript</a>
+<a href="#typescript" style="font-size:20px;">TypeScript</a>
+<a href="#dart" style="font-size:20px;">Dart</a>
+<a href="#webapps" style="font-size:20px;">Web Application Development</a>
+<a href="#ecmascript6" style="font-size:20px;">ECMAScript 6</a>
+<a href="#conclusions" style="font-size:20px;">Conclusions</a>
+
+<a name="javascript"></a>
+<h2>Why JavaScript Isn't Enough?</h2>
+
+This article assumes that the reader has a good knowledge of JavaScript and has done at least some development in it, but if this is not about you, you can just first refer to one of the beginner's JavaScript books like <a href="http://eloquentjavascript.net/">Eloquent JavaScript</a>. 
+
+JavaScript is an amazing, often underappreciated and misunderstood language. It has some really powerful concepts like functions as first-class citizens (see, for example, <a href="http://www.crockford.com/javascript/javascript.html">JavaScript: The World's Most Misunderstood Programming Language</a>), flexible prototypal inheritance and is a powerful generic programming language that can be used not only in browsers.
+
+Despite all its power and flexibility the language has some well-known design shortcomings such as global variables, cumbersome emulation of lexical scoping, non-intuitive implicit conversions, etc. In fact, there are parts of the language that you better avoid using at all, as it is advised in <a href="http://www.amazon.com/JavaScript-Good-Parts-Douglas-Crockford/dp/0596517742">JavaScript: The Good Parts</a>. Let us also note that from the beginning JavaScript was not specifically designed for developing applications with large code bases and many developers involved. 
+
+Nonetheless, it is increasingly used for developing precisely such applications. In such cases in order for the code to be maintainable it should have a well-defined structure and developers should adhere to a strict coding discipline in order to avoid producing a festering pile of messy code where everything depends on everything and no boundaries can be found between modules. Unfortunately, in JavaScript it is all too easy to transform your code base into an abomination, this is somewhat similar to Ruby, but actually even worse, since unlike in Ruby there is no standard mechanism for emulating class-based inheritance and separating your code into modules and packages. Having no types specified in the source code does not help either.
+
+The point is that for large applications JavaScript developers need to be extra careful and disciplined as they are not particularly restricted from producing a horrible pile of code. The most recent trend is exactly towards complex applications being written in JavaScript. For example, for the client side it was well understood for quite some time that moving a lot of presentational logic to the browser makes much more sense than keeping it away from the client on the server. The clients have become thicker and more complex, MVC frameworks for the client side appeared, one of them <a href="http://backbonejs.org/">Backbone.js</a>, etc. Of course, JavaScript is not limited to just the client side and there appeared large server-side applications as well, see <a href="http://nodejs.org/">Node.js</a> It looks like now there is time for the language to be updated to be better fit for the new challenges and cases that were likely just not foreseen by its creators from the very beginning.
+
+There are quite a few changes coming to JavaScript in the recent versions of the language standard, for example, see <a href="http://en.wikipedia.org/wiki/ECMAScript#ECMAScript_Harmony_.286th_Edition.29">ECMAScript 6</a>, but also simultaneously a number of languages started to appear near JavaScript that try to address the described issues. The present article is just a brief overview of the most well-known of these language and a discussion how they relate to each other and JavaScript. This is not a thorough research of all of the mentioned languages, but rather an attempt to get a feeling of what those languages are and why we should care about them. 
+
+<a name="javascriptexample"></a>
+<h2>Example JavaScript Program: Dijkstra's Algorithm</h2>
+
+For our discussion and comparison to be more tangible and less abstract let's consider some program in JavaScript and see to what it translates in the selected languages while highlighting the most interesting parts and differences between those languages.
+
+As an example, let's take an implementation of <a href="http://en.wikipedia.org/wiki/Dijkstra's_algorithm">Dijkstra's algorithm</a> for finding the shortest path between two nodes in a directed graph. For the purposes of the present article it is actually not important to understand how the algorithm works, but in case you are interested in the algorithm itself, you can just read the Wiki <a href="http://en.wikipedia.org/wiki/Dijkstra's_algorithm">article</a>.
+
+So, <a href="https://github.com/antivanov/misc/blob/master/JavaScript/dijkstra_algorithm.js">here</a> is the implementation in JavaScript:
+
+[sourcecode language="JavaScript"]
+Array.prototype.remove = Array.prototype.remove || function(element) {
+	var index = this.indexOf(element);
+
+	if (index >= 0) {
+	    this.splice(index, 1);
+	};
+};
+
+Array.prototype.contains = Array.prototype.contains || function(element) {
+	return this.indexOf(element) >= 0;
+};
+
+var graphs = {};
+
+(function(host) {
+	function Graph(nodesNumber, edges) {
+		this.nodesNumber = nodesNumber;
+		this.initEdges(edges);
+	};
+
+	Graph.prototype.initEdges = function(edges) {
+		var oThis = this,
+			i = 0;
+
+		this.edges = [];
+		for (; i < this.nodesNumber; i++) {
+			this.edges[i] = [];
+		};		
+		if (edges) {
+			edges.forEach(function (edge) {
+				oThis.edge(edge[0], edge[1], edge[2]);
+			});
+		};
+	};
+
+	Graph.prototype.edge = function(from, to, weight) {
+		this.edges[from - 1][to - 1] = weight;
+		return this;
+	};
+	
+	Graph.prototype._constructShortestPath = function(distances, previous, unvisited, to) {
+		var vertex = to,
+		path = [];
+
+		while (undefined != vertex) {
+			path.unshift(vertex + 1);
+			vertex = previous[vertex];
+		};
+			
+		return {
+			path: path,
+			length: distances[to]
+		};
+	};
+
+	Graph.prototype._getUnvisitedVertexWithShortestPath = function(distances, previous, unvisited) {
+		var minimumDistance = Number.MAX_VALUE,
+			vertex = null;
+			
+		unvisited.forEach(function (unvisitedVertex) {
+			if (distances[unvisitedVertex] < minimumDistance) {
+				vertex = unvisitedVertex;
+				minimumDistance = distances[vertex];
+			};
+		});
+		return vertex;
+	};
+	
+	Graph.prototype._updateDistancesForCurrent = function(distances, previous, unvisited, current) {	
+		for (var i = 0; i < this.edges[current].length; i++) {
+			var currentEdge = this.edges[current][i];
+			
+			if ((undefined != currentEdge) &amp;&amp; unvisited.contains(i)) {
+				if (distances[current] + currentEdge < distances[i]) {
+					distances[i] = distances[current] + currentEdge;
+					previous[i] = current;
+				};
+			};			
+		};
+	};
+
+	//Dijkstra algorithm http://en.wikipedia.org/wiki/Dijkstra's_algorithm
+	Graph.prototype.getShortestPath = function(from, to) {
+		var unvisited = [],
+		    current = null,
+		    distances = [],
+		    previous = [];
+
+		from = from - 1;		
+		to = to - 1;
+		//Initialization
+		for (var i = 0; i < this.nodesNumber; i++) {
+			unvisited.push(i);
+			//Infinity
+			distances.push(Number.MAX_VALUE);
+		};
+		distances[from] = 0;
+		
+		while (true) {
+			if (!unvisited.contains(to)) {
+				return this._constructShortestPath(distances, previous, unvisited, to);
+			};
+			current = this._getUnvisitedVertexWithShortestPath(distances, previous, unvisited);
+		
+			//No path exists
+			if ((null == current) || (Number.MAX_VALUE == distances[current])) {
+				return {
+		    		path: [],
+		    		length: Number.MAX_VALUE
+				};
+			};
+			this._updateDistancesForCurrent(distances, previous, unvisited, current);			
+			unvisited.remove(current);
+		};
+	};
+
+	host.Graph = Graph;
+})(graphs);
+
+var graph = new graphs.Graph(8, [
+	[1, 2, 5], [1, 3, 1], [1, 4, 3],
+	[2, 3, 2], [2, 5, 2],
+	[3, 4, 1], [3, 5, 8],
+	[4, 6, 2],
+	[5, 7, 1],
+	[6, 5, 1]
+]);
+
+var shortestPath = graph.getShortestPath(1, 7);
+
+console.log("path = ", shortestPath.path.join(","));
+console.log("length = ", shortestPath.length);
+
+//No shortest path to the vertex '8'
+console.log(graph.getShortestPath(1, 8));
+[/sourcecode]
+
+This example demonstrates emulating classes with prototypes, extending the core language objects (Array), and working with data structures. All this should already be familiar to you, otherwise, please, refer to some JavaScript resource to quickly get up to speed with the language.
+
+<a name="coffeescript"></a>
+<h2>CoffeeScript</h2>
+
+<a href="http://coffeescript.org/">CoffeeScript</a> addresses some of the JavaScript issues described above. It introduces classes, shortcuts for most common JavaScript boiler-plate code, such as <b>@</b> for <b>this</b> and <b>::</b> for <b>prototype</b>, saves on number of code lines, gets rid of curly braces and actively uses indentation to give structure to your program.
+
+<a href="https://github.com/antivanov/misc/blob/master/CoffeeScript/dijkstra_algorithm.coffee">Here</a> is the algorithm rewritten in CoffeeScript:
+
+[sourcecode]
+Array::remove = Array::remove || (element) ->
+    index = @indexOf(element)
+    @splice(index, 1) if index >= 0
+
+graphs = {}
+
+graphs.Graph = class Graph
+
+    constructor: (@nodesNumber, edges) ->
+        @initEdges(edges)
+
+    initEdges: (edges) ->
+        @edges = []
+        @edges[i] = [] for i in [0..@nodesNumber]
+        @edge edge... for edge in edges if edges
+    
+    edge: (from, to, weight) ->
+        @edges[from - 1][to - 1] = weight
+
+    _constructShortestPath = (distances, previous, unvisited, to) ->
+        vertex = to
+        path = []
+
+        while vertex?
+            path.unshift(vertex + 1);
+            vertex = previous[vertex];
+
+        path: path
+        length: distances[to]
+        
+    _getUnvisitedVertexWithShortestPath = (distances, previous, unvisited) ->
+        minimumDistance = Number.MAX_VALUE
+
+        for unvisitedVertex in unvisited
+            if (distances[unvisitedVertex] < minimumDistance)
+                vertex = unvisitedVertex
+                minimumDistance = distances[vertex]
+
+        vertex
+
+    _updateDistancesForCurrent: (distances, previous, unvisited, current) ->
+        for edge, i in @edges[current]
+            if ((undefined != edge) &amp;&amp; edge >= 0 &amp;&amp; i in unvisited &amp;&amp; (distances[current] + edge < distances[i]))
+                distances[i] = distances[current] + edge
+                previous[i] = current
+
+    #Dijkstra algorithm http://en.wikipedia.org/wiki/Dijkstra's_algorithm
+    getShortestPath: (from, to) ->
+        unvisited = []
+        current = null
+        distances = []
+        previous = []
+
+        from = from - 1        
+        to = to - 1
+
+        #Initialization
+        for i in [0..@nodesNumber]
+            unvisited.push(i)
+            #Infinity
+            distances.push(Number.MAX_VALUE)
+
+        distances[from] = 0
+        
+        while (true)
+            if (not (to in unvisited))
+                return _constructShortestPath(distances, previous, unvisited, to);
+
+            current = _getUnvisitedVertexWithShortestPath(distances, previous, unvisited)
+        
+            #No path exists
+            if ((null == current) || (undefined == current) || (Number.MAX_VALUE == distances[current]))
+                return {
+                    path: []
+                    length: Number.MAX_VALUE
+                }
+
+            @_updateDistancesForCurrent(distances, previous, unvisited, current)            
+            unvisited.remove(current)
+
+        return
+
+graph = new graphs.Graph(8, [
+    [1, 2, 5], [1, 3, 1], [1, 4, 3],
+    [2, 3, 2], [2, 5, 2],
+    [3, 4, 1], [3, 5, 8],
+    [4, 6, 2],
+    [5, 7, 1],
+    [6, 5, 1]
+]);
+
+shortestPath = graph.getShortestPath(1, 7)
+
+console.log("path = ", shortestPath.path.join(","))
+console.log("length = ", shortestPath.length)
+
+#No shortest path to the vertex '8'
+console.log(graph.getShortestPath(1, 8))
+[/sourcecode]
+
+As it can be seen CoffeeScript is a completely different language that can be then (usually) compiled into JavaScript or executed outright. It is not a superset or subset of JavaScript and you cannot just freely mix JavaScript and CoffeeScript constructs in one program. There is still a <a href="http://coffeescript.org/#embedded">mechanism</a> for executing JavaScript embedded inside your CoffeeScript, although normally you would not use it.
+
+The CoffeeScript version is somewhat shorter: the number of lines of the CoffeeScript code in our example is approximately 2/3 of the number of lines of the JavaScript version. 
+
+From my brief experience with it I can say that programming in CoffeeScript requires advanced JavaScript knowledge and you often have to think about what exact JavaScript code will be produced from your CoffeeScript code.
+
+Tooling support also lags behind so if something goes wrong in your code you will have to debug the resulting JavaScript while simultaneously matching it with the original CoffeeScript source. The amount of time it took me to write the CoffeeScript version of the Dijkstra's algorithm was actually the same or larger than what I spent on writing the JavaScript version, but then again, I am not an experienced CoffeeScript programmer and maybe as time goes, the speed of development will increase.
+
+Apart from the lack of good development tools for CoffeeScript (at least I did not find any) the resulting code is a bit cryptic and terse, a bit like Bash. Overall, the language somewhat reminds of Ruby and Python.
+
+The main plus of CoffeeScript is getting rid of the syntactic noise that can often be encountered in JavaScript,  like <b>Graph.prototype.</b> or <b>.forEach(function() {...})</b>, and as a result you start to see the core logic of the program better. Also, it is nice that CoffeeScript introduces classes, it potentially gives large programs more structure in a more unified way than in JavaScript where everybody devises their own way to emulate class-based inheritance.
+
+<a name="typescript"></a>
+<h2>TypeScript</h2>
+
+<a href="http://www.typescriptlang.org/">TypeScript</a> is a superset of JavaScript enhanced with type annotations, classes and modules. It demonstrates a rather conservative approach to addressing the many issues of JavaScript compared to other languages in this article as TypeScript does not try to replace JavaScript, in fact, any valid JavaScript code is valid TypeScript code.
+
+<a href="https://github.com/antivanov/misc/blob/master/TypeScript/dijkstra_algorithm.ts">Here</a> is the TypeScript version:
+
+[sourcecode]
+interface Array {
+    remove(element: any): void;
+    contains(element: any): bool;
+}
+
+Array.prototype.remove = Array.prototype.remove || function(element) {
+    var index = this.indexOf(element);
+
+    if (index >= 0) {
+        this.splice(index, 1);
+    };
+};
+
+Array.prototype.contains = Array.prototype.contains || function(element) {
+    return this.indexOf(element) >= 0;
+};
+
+module graphs {
+    export class Graph {
+    
+        edges: number[][];
+    
+        constructor(public nodesNumber: number, edges: number[][]) {
+            this.initEdges(edges);
+        }
+        
+        initEdges(edges: number[][]): void {
+            var oThis = this,
+            i = 0;
+
+            this.edges = [];
+            for (; i < this.nodesNumber; i++) {
+                this.edges[i] = [];
+            };        
+            if (edges) {
+                edges.forEach(function (edge) {
+                    oThis.edge.apply(oThis, edge);
+                });
+            };
+        }
+        
+        edge(from: number, to: number, weight: number): Graph {
+            this.edges[from - 1][to - 1] = weight;
+            return this;
+        }
+
+        //Dijkstra algorithm http://en.wikipedia.org/wiki/Dijkstra's_algorithm
+        getShortestPath(from: number, to: number): {path: number[]; length: number;} {
+            var unvisited = [],
+                current = null,
+                distances = [],
+                previous = [];
+
+            from = from - 1;        
+            to = to - 1;
+            //Initialization
+            for (var i = 0; i < this.nodesNumber; i++) {
+                unvisited.push(i);
+                //Infinity
+                distances.push(Number.MAX_VALUE);
+            };
+            distances[from] = 0;
+        
+            while (true) {
+                if (!unvisited.contains(to)) {
+                    return this._constructShortestPath(distances, previous, unvisited, to);
+                };
+                current = this._getUnvisitedVertexWithShortestPath(distances, previous, unvisited);
+        
+                //No path exists
+                if ((null == current) || (Number.MAX_VALUE == distances[current])) {
+                    return {
+                        path: [],
+                        length: Number.MAX_VALUE
+                    };
+                };
+                this._updateDistancesForCurrent(distances, previous, unvisited, current);            
+                unvisited.remove(current);
+            };
+        }
+
+        private _constructShortestPath(distances: number[], previous: number[],
+             unvisited: number[], to: number): { path: number[]; length: number; } {
+            var vertex = to,
+            path = [];
+
+            while (undefined != vertex) {
+                path.unshift(vertex + 1);
+                vertex = previous[vertex];
+            };
+            
+            return {
+                path: path,
+                length: distances[to]
+            };
+        }
+
+        private _getUnvisitedVertexWithShortestPath(distances: number[], previous: number[], unvisited: number[]): number {
+            var minimumDistance = Number.MAX_VALUE,
+                vertex = null;
+            
+            unvisited.forEach(function (unvisitedVertex) {
+                if (distances[unvisitedVertex] < minimumDistance) {
+                    vertex = unvisitedVertex;
+                    minimumDistance = distances[vertex];
+                };
+            });
+            return vertex;
+        }
+
+        private _updateDistancesForCurrent(distances: number[], previous: number[], unvisited: number[], current: number): void {    
+            for (var i = 0; i < this.edges[current].length; i++) {
+                var currentEdge = this.edges[current][i];
+            
+                if ((undefined != currentEdge) &amp;&amp; unvisited.contains(i)) {
+                    if (distances[current] + currentEdge < distances[i]) {
+                        distances[i] = distances[current] + currentEdge;
+                        previous[i] = current;
+                    };
+                };            
+            };
+        }
+    }
+}
+
+var graph = new graphs.Graph(8, [
+    [1, 2, 5], [1, 3, 1], [1, 4, 3],
+    [2, 3, 2], [2, 5, 2],
+    [3, 4, 1], [3, 5, 8],
+    [4, 6, 2],
+    [5, 7, 1],
+    [6, 5, 1]
+]);
+
+var shortestPath = graph.getShortestPath(1, 7);
+
+console.log("path = ", shortestPath.path.join(","));
+console.log("length = ", shortestPath.length);
+
+//No shortest path to the vertex '8'
+console.log(graph.getShortestPath(1, 8));
+[/sourcecode]
+
+The main focus of the language is not minimizing the number of lines of the resulting code as in CoffeeScript, but rather making JavaScript friendlier for external tools, static analysis and large project development. As it can be seen, the number of lines is roughly the same as in the JavaScript version.
+
+Converting the existing JavaScript code into more idiomatic TypeScript code is very fast and simple, and can be done seamlessly and gradually for an existing code base, which is a huge plus when deciding to migrate an existing JavaScript project to TypeScript.
+
+TypeScript is also compiled to JavaScript with the command <b>tsc</b> just like the CoffeeScript code in the previous section. However, unlike CoffeeScript, TypeScript has a good tool support in the form of a Visual Studio editor and potentially plugins for other IDEs. For example, the latest version of <a href="http://www.jetbrains.com/webstorm/">WebStorm</a> will include support for TypeScript. Developing in TypeScript feels a lot like developing in JavaScript but you feel yourself a bit safer thanks to the type annotations.
+
+The TypeScript language looks very promising. Some of its features have analogs in the recent version of the JavaScript standard <a href="http://en.wikipedia.org/wiki/ECMAScript#ECMAScript_Harmony_.286th_Edition.29">ECMAScript 6</a>. The main plus of the language is that it does not reject JavaScript outright but rather tries to improve on the existing language while avoiding introducing too many new concepts for a JavaScript developer.
+
+<a name="dart"></a>
+<h2>Dart</h2>
+
+<a href="http://www.dartlang.org/">Dart</a>, like CoffeeScript, is a separate language, although there are considerably more similarities with JavaScript syntaxwise. Sometimes it feels a bit like trying to bring some Java or C# into JavaScript: it has classes, generics, lists, maps, etc. Dart can be compiled into JavaScript or run directly on a Dart VM.
+
+The Dart <a href="https://github.com/antivanov/misc/blob/master/Dart/dijkstra_algorithm.dart">version</a> of the Dijkstra's algorithm:
+
+[sourcecode language="Ruby"]
+library Graphs;
+
+class Graph {
+  num nodesNumber;
+  List<List<num>> edges;
+  
+  Graph(num nodesNumber, List<List<num>> edges) {
+      this.nodesNumber = nodesNumber;
+      initEdges(edges);
+  }
+
+  void initEdges(List<List<num>> edges) {
+      this.edges = new List<List<num>>();
+      for (int i = 0; i < nodesNumber; i++) {
+          List<num> row = new List<num>();
+
+          for (int j = 0; j < nodesNumber; j++) {            
+              row.add(null);
+          }
+          this.edges.add(row);
+      }
+      if (!edges.isEmpty) {
+          edges.forEach((e) {
+              edge(e[0], e[1], e[2]);
+          });
+      }
+  }
+  
+  void edge(num from, num to, num weight) {
+      edges[from - 1][to - 1] = weight;
+  }
+ 
+  Map _constructShortestPath(List<num> distances, List<num> previous, List<num> unvisited, num to) {
+      num vertex = to;
+      List<num> path = new List<num>();
+
+      while (null != vertex) {
+          path.add(vertex + 1);
+          vertex = previous[vertex];
+      };
+      
+      return {
+         'path': path,
+         'length': distances[to]
+      };
+  }
+  
+  num _getUnvisitedVertexWithShortestPath(List<num> distances, List<num> previous, List<num> unvisited) {
+    num minimumDistance = 1/0;
+    num vertex = null;
+      
+    unvisited.forEach((unvisitedVertex) {
+      if (distances[unvisitedVertex] < minimumDistance) {
+        vertex = unvisitedVertex;
+        minimumDistance = distances[vertex];
+      };
+    });
+    return vertex;
+  }
+  
+  void _updateDistancesForCurrent(List<num> distances, List<num> previous, List<num> unvisited, num current) {  
+    for (num i = 0; i < edges[current].length; i++) {
+      num currentEdge = edges[current][i];
+      
+      if ((null != currentEdge) &amp;&amp; unvisited.contains(i)) {
+        if (distances[current] + currentEdge < distances[i]) {
+          distances[i] = distances[current] + currentEdge;
+          previous[i] = current;
+        };
+      };
+    };
+  }
+  
+  //Dijkstra algorithm http://en.wikipedia.org/wiki/Dijkstra's_algorithm
+  Map getShortestPath(num from, num to) {  
+      List<num> unvisited = new List<num>();
+      num current = null;
+      List<num> distances = new List<num>();
+      List<num> previous = new List<num>();
+
+      from = from - 1;    
+      to = to - 1;
+      //Initialization
+      for (num i = 0; i < nodesNumber; i++) {
+          unvisited.add(i);
+          //Infinity
+          distances.add(1/0);
+          previous.add(null);
+      };
+      distances[from] = 0;
+    
+      while (true) {
+          if (!unvisited.contains(to)) {
+              return _constructShortestPath(distances, previous, unvisited, to);
+          };
+          current = _getUnvisitedVertexWithShortestPath(distances, previous, unvisited);
+    
+          //No path exists
+          if ((null == current) || (1/0 == distances[current])) {
+              return {
+                  'path': [],
+                  'length': 1/0
+              };
+          };
+          this._updateDistancesForCurrent(distances, previous, unvisited, current);     
+          unvisited.remove(current);
+      };
+  }
+}
+
+void main() {
+    Graph graph = new Graph(8, [
+        [1, 2, 5], [1, 3, 1], [1, 4, 3],
+        [2, 3, 2], [2, 5, 2],
+        [3, 4, 1], [3, 5, 8],
+        [4, 6, 2],
+        [5, 7, 1],
+        [6, 5, 1]
+    ]);
+  
+    Map shortestPath = graph.getShortestPath(1, 7);
+
+    print("path = ");
+    print(shortestPath['path'].join(","));
+    print("length = ");
+    print(shortestPath['length']);
+  
+    //No shortest path to the vertex '8'
+    print(graph.getShortestPath(1, 8));
+}
+[/sourcecode]
+
+From what I read and heard about Dart it seems that its main goal is to enable development of faster web applications. Using raw JavaScript may often lead to suboptimal performance, when using Dart on the other hand, you leverage the power of its compiler that will likely produce more optimal JavaScript code than what you would write yourself or you leverage the engineering effort invested into the Dart VM.
+
+It would be actually interesting to look at the benchmarks how Dart, TypeScript, CoffeeScript and JavaScript applications perform compared to each other but I have a strong suspicion that Dart code will be the fastest one.
+
+Like in TypeScript, there is support for better structuring of your application with libraries, classes and types. The brevity of code is not a goal like in CoffeeScript, instead the language tries to achieve better speed and maintainability.
+
+A bit about tools and editors. There is a special Dart <a href="http://www.dartlang.org/downloads.html">editor</a> which has code assistance and highlighting and makes development much more pleasant. In the future there can also appear plugins for popular IDEs like, Eclipse.
+
+The greatest disadvantage of Dart is the need to learn a new language, however, the language is quite simple, has good online documentation and learning it is still faster than learning CoffeeScript.
+
+Another impression I got from using the language and its library is that it is a bit raw, for example, some features that you would expect to find are sometimes missing: there are no varargs, <b>print</b> accepts only one argument, etc. But this is still much better than Java where you constantly see missing things.
+
+<a name="webapps"></a> 
+<h2>Web Application Development</h2>
+
+The main area where JavaScript is used is Web application development, both on the client side and on the server side. The considered languages are generic programming languages that can easily be used in this domain area combined with the existing libraries, please, refer to the documentation on the sites dedicated to a specific language.
+
+<a name="ecmascript6"></a>
+<h2>ECMAScript 6</h2>
+
+The recent version of standard for JavaScript includes support for classes and modules similar to what we considered in other JavaScript related languages here, which should make creating large complex applications easier. See, for example, the following <a href="http://addyosmani.com/blog/a-few-new-things-coming-to-javascript/">article</a>
+
+<a name="conclusions"></a>
+<h2>Conclusions</h2>
+
+<ul>
+
+<li>There is a huge need for JavaScript language improvements due to the changed landscape of JavaScript development, as a result a number of languages has appeared</li>
+
+<li>Main improvements come in the areas of maintainability for large complex projects (classes, modules, types), code brevity and performance</li>
+
+<li>Introduction of classes, modules (libraries) and types in Dart and TypeScript allows to implement better IDE support</li>
+
+<li>Considered languages are generic and can be used both on the client and server side</li>
+
+<li>All considered languages can be compiled into JavaScript which plays here a role of a low level assembly language, although it is itself a high-level programming language</li>
+
+<li>Some languages are still fast moving and changing and have only their first versions available for use (Dart, TypeScript)</li>
+
+<li>All languages preserve functions as first-class citizens which seems to be a very powerful feature in JavaScript</li>
+
+</ul>
+
+And here is a small matrix that compares the languages against each other:
+
+<a href="http://smthngsmwhr.files.wordpress.com/2013/02/js_langs.png"><img src="http://smthngsmwhr.files.wordpress.com/2013/02/js_langs.png" alt="js_langs" width="600" height="353" class="alignnone size-full wp-image-255" /></a>
+
+<h4>Legend:</h4>
+
+Better Structure - it is easy to structure programs into modules
+Editor Friendly - it is possible to write editors with re-factoring and autocomplete
+Better Speed - improvement in the performance of the code
+Large Applications - complex applications with large teams involved are easier to develop
+Brevity of Code - if the number of lines of code is reduced
+Ease of Learning - whether it is easy to start programming in a language for a JavaScript developer
+Easy Debugging - it is easy to find problems in code and debug
+
+There are still quite a few languages that compile to JavaScript but were not covered here. Please, see the following <a href="https://github.com/jashkenas/coffee-script/wiki/List-of-languages-that-compile-to-JS">list</a> for more details in case you are interested. For example, there is <a href="https://github.com/clojure/clojurescript">ClojureScript</a>: a Lisp dialect that can be compiled to JavaScript and many other interesting languages. Unfortunately, I did not yet have time to look at some of them and might as well have missed something that is worth attention.
+
+<h2>Links</h2>
+
+<a href="http://eloquentjavascript.net/">Eloquent JavaScript (book)</a>
+<a href="http://www.crockford.com/javascript/javascript.html">JavaScript: The World's Most Misunderstood Programming Language</a>
+<a href="http://en.wikipedia.org/wiki/Dijkstra's_algorithm">Dijkstra's algorithm</a>
+<a href="http://coffeescript.org/">CoffeeScript language</a>
+<a href="http://arcturo.github.com/library/coffeescript/">The Little Book on CoffeeScript</a>
+<a href="http://www.typescriptlang.org/">TypeScript language</a>
+<a href="http://www.youtube.com/watch?v=3dqZW_DqHIQ">Goto 2012: TypeScript Keynote</a>
+<a href="http://www.dartlang.org/">Dart language</a>
+<a href="http://www.youtube.com/watch?v=bsGgfUreyZw">Google I/O 2012: Dart - A Modern Web Language</a>
+<a href="http://en.wikipedia.org/wiki/ECMAScript#ECMAScript_Harmony_.286th_Edition.29">ECMAScript 6</a>
+<a href="http://addyosmani.com/blog/a-few-new-things-coming-to-javascript/">A Few New Things Coming To JavaScript</a>
