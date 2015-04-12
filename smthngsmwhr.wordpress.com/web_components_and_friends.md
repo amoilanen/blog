@@ -5,6 +5,7 @@
 [Polymer](#polymer)
 [React.js](#react-js)
 [Angular.js](#angular-js)
+[Why not jQuery?](#why-not-jquery)
 
 
 
@@ -616,7 +617,7 @@ var Breadcrumbs = React.createClass({
 
 *Crumb* in lines *1-16* has some handling for key presses and clicks. In lines *2-4* we call the function *this.props.onSelected* with the index of the current crumb *this.props.idx*, both properties have been supplied by the parent *Breadcrumbs* components in the lines *66-67*.
 
-The *Crumb* and *CrumbSeparator* components are quite self-contained and simple, yet they hide some of the low-level details from the *Breadcrumbs* implementation.
+The *Crumb* and *CrumbSeparator* components are quite self-contained and simple, yet they hide some of the low-level details from the *Breadcrumbs* implementation and can be easily composed into a *Breadcrumbs* component.
 
 In line *67* we specify that *onSelected* function from lines *28-37* should be called whenever a *Crumb* child component is selected. In *onSelected* we just check if the path has changed compared to what *Breadcrumbs* received in its properties in line *34*, and then call the supplied *onChange* handler in line *35*, as you might remember we defined this handler as a property on the current *Breadcrumbs* instance earlier in *BreadcrumbsDemo*.
 
@@ -657,16 +658,218 @@ You can search for React components here http://react-components.com/ or use Rea
 
 # <a name="angular-js"></a>Angular.js
 
-TODO
+Another way to solve the componentization challenge is to use Angular.js, a full-fledged framework for building modern Web apps. Like React it allows to easily create and compose you application from reusable components, unlike React this is not its main feature, and it is not as emphasized, you can even have an app written with Angular and no reusable components. Although the documentation https://angularjs.org/ states that "AngularJS lets you extend HTML vocabulary for your application." far too many apps written with Angular that I saw completely ignore this feature, so our discussion of how and why you should create components with Angular might be useful for some Angular developers as well.
 
-Plus: everything is included.
+With Angular components can be defined using directives, but directives can be used not only to create components but also for many other things. We will briefly remind what directives are below. Also Angular deals with routing, data flow, has far more concepts to grasp, and has a much stronger focus on testability. Creating components and view updates is only a part of what Angular is all about, and the philosophy behind those is a bit different than what we just discussed. Let's quickly go over some of the Angular features that we will utilize in our example.
 
-Minus: tries to redefine JavaScript, make it look more like Java.
-Minus: cascading updates, which scope is which.
+#### **Directives**
+
+**Directives** are special markers that can be attached to HTML elements in the form of attributes or CSS classes, or they can even be HTML elements themselves. The last case is the most interesting one for us as directives in the form of HTML elements behave a lot like custom HTML elements that we already saw in Web Components. More information https://docs.angularjs.org/guide/directive
+
+Simple example:
+
+```javascript
+<body ng-app="BreadcrumbsDemo" ng-controller="Path">
+```
+
+Directive *ng-app* defines a new Angular app and the root element for it. Another directive *ng-controller* binds controller named *Path* to the part of the DOM rooted in the HTML element on which the directive is used.
+
+Directives are a bit like annotations in DOM, they can have a meaning that we can define for them, and then Angular will interpret our directive definitions and enhance the DOM with the specified behavior and elements. There are a few predefined Angular directives two of which we just saw in use, but also we can define our own, and, in fact, this is the mechanism we will be using to create our own custom *Breadcrumbs* component.
+
+#### **Controllers and scopes**
+
+**Controller** https://docs.angularjs.org/guide/controller is a piece of code that is associated with some part of HTML by using *ng-controller* directive. In our example https://github.com/antivanov/ui-components/blob/master/Angular.js/breadcrumbs/breadcrumbs.demo.html:
+
+```html
+<body ng-app="BreadcrumbsDemo" ng-controller="Path">
+  <div id="breadcrumb-container">
+    <comp-breadcrumbs path="path" max-entries="5"
+      on-change="onPathChange(path)"></comp-breadcrumbs>
+  </div>
+  <div id="content">{{path[path.length - 1 ]}}</div>
+  <button id="resetButton" ng-click="reset()">Reset</button>
+</body>
+```
+
+In line *1* we bind our *Path* controller to the document *body*. Every controller has a **scope** associated with it, which is another core Angular concept. In this example the scope of the *Path* controller is bound to the *body* element as well. We refer to the variable *path* stored in this scope in line *6*, and in line *4* we bind the function *onPathChange* from the same scope to the *on-change* attribute of the *Breadcrumbs* *comp-breadcrumbs* directive we will define a bit later. We also pass to the Breadcrumbs instance in line *3* *path* from the controller's scope define *max-entries* for it as *5*. Finally, in line *7* we bind the *reset* function from the scope to be called when *resetButton* button is clicked.
+
+And here is the code for the controller that adds the mentioned values and functions to its scope:
+
+```javascript
+    var app = angular.module('BreadcrumbsDemo', ['Components']);
+
+    app.constant('fullPath',
+      ['element1', 'element2', 'element3',
+       'element4', 'element5', 'element6', 'element7'])
+    .controller('Path', function Path($scope, fullPath) {
+      $scope.reset = function() {
+        $scope.path = fullPath;
+      };
+      $scope.onPathChange = function(path) {
+        $scope.path = path;
+      };
+      $scope.reset();
+    });
+```
+
+In line *6* we **inject** constant *fullPath* and *$scope* into the *Path* controller. The concept of **dependency injection** or *DI* originates from the Java world and there it is used among other things to ensure that we explicitly specify dependencies for every piece of code we use and also that we can easily substitute those dependencies in unit tests with some mocks or stubs. Here, DI also helps to make our JavaScript code more testable and forces us to be more explicit about what dependencies our controllers have. Testability is one of the nicest features of Angular built into it from the very beginning.
+
+Then in lines *7-13* we just set some values in the scope. Just like React Angular will take care of properly rendering and updating the view given the values we put into the scope, also it will register event listeners for us. Here we see how the view update challenge is solved by Angular. But unlike React, we can refer to parent scopes in the markup and also we have to take extra care when propagating value updates from upper scopes downwards the controller/scope hierarchy. On this example it is not quite visible since it has only one controller.
+
+In React as you remember we had a tree of components, nested and composed with each other, in Angular we rather have a tree of controllers and associated scopes nested inside of each other. And controller does not know much about the view part like React components.
+
+In fact dealing with those nested scopes and controllers in Angular, updating them in proper order and understanding what scope you are dealing with at each particular moment can be quite confusing and challenging. So at least in this respect React seems to be simpler.
+
+This may sound a bit complicated, and we are not even quite finished with the scopes yet, because now we will take a look at our *Breadcrumbs* component https://github.com/antivanov/ui-components/blob/master/Angular.js/breadcrumbs/breadcrumbs.js which, like we said before, is just a directive that uses a custom tag name. For this directive there will be two more scopes: one associated with the directive itself and one with the controller of the directive.
+
+```javascript
+var components = angular.module('Components', []);
+
+components.controller('breadcrumbsController', function ($scope) {
+
+  function adaptForRendering(path, maxEntries) {
+    maxEntries = maxEntries || -1;
+    var hasShortened = false;
+    var shortenedPath = [];
+
+    path.forEach(function(pathPart, idx) {
+
+      //Skip path entries in the middle
+      if ((maxEntries >= 1) && (idx >= maxEntries - 1) 
+        && (idx < path.length - 1)) {
+
+        //Render the dots separator once
+        if (!hasShortened) {
+          var tooltipParts = path.slice(maxEntries - 1);
+
+          tooltipParts.pop();
+          shortenedPath.push({
+            value: '...',
+            dots: true,
+            tooltip: tooltipParts.join(' > ')
+          });
+          hasShortened = true;
+        }
+        return;
+      }
+      shortenedPath.push({
+        value: pathPart,
+        index: idx
+      });
+    });
+    return shortenedPath;
+  }
+
+  $scope.activatePathPart = function(pathPart) {
+    $scope.pathSelected(!pathPart.dots ? pathPart.index : -1)
+  };
+
+  $scope.pathSelected = function(idx) {
+    if (idx < 0) {
+      return;
+    }
+    var newPath = $scope.path.slice(0, idx + 1);
+
+    if (newPath.join('/') != $scope.path.join('/')) {
+      $scope.onChange({
+        path: newPath
+      });
+    }
+  };
+
+  $scope.pathToRender = adaptForRendering($scope.path,
+    $scope.maxEntries);
+  $scope.$watchCollection('path', function(path) {
+    $scope.pathToRender = adaptForRendering(path, $scope.maxEntries);
+  });
+}).directive('compBreadcrumbs', function () {
+  return {
+    restrict: 'E',
+    scope: {
+      path: '=',
+      onChange: '&onChange',
+      maxEntries: '='
+    },
+    controller: 'breadcrumbsController',
+    templateUrl: 'breadcrumbs.tpl.html'
+  };
+});
+```
+
+In lines *60-70* we define a new *compBreadcrumbs* directive, an instance of which will be created once we use &lt;comp-breadcrumbs&gt; markup in our Angular app. In line *62* with *restrict: 'E'* we specify that the directive can be used only as a custom HTML element. In line *69* we specify the template to be used to generate HTML elements for our directive and in line *68* that controller *breadcrumbsController* should be used, an instance of which will be created for every instance of our directive.
+
+Lines *63-67* define the isolated scope of the directive and how it is connected with the enclosing scope in which the directive is used. In line *64* we bind *path* to the *path* attribute of the directive as it is used in the app markup, and in line *66* we bind *maxEntries* to the *maxEntries* attribute. In line *65* we use *&amp;onChange* so that the *onChange* function stored in the isolated scope of the directive will be always invoked in the context of the enclosing scope in which the directive is used (its parent scope). This enclosing scope is the scope of the *Path* controller we saw before.
+
+The behavior of the directive is specified in the controller we use inside it in the lines *3-60*.
+
+In lines *38-53* we define the functions that are triggered whenever an individual crumb is activated. When the path should change like in the earlier examples with Web Components and React we just call the function provided to the component from the outer scope in lines *49-51*. There are quite a few other options to notify the controller from a directive inside it, but we will omit those to keep the discussion of Angular a bit shorter.
+
+In lines *57-59* we specify that Angular should watch the scope for changes in the *path* and whenever they occur we should update the scope value *pathToRender* by calling *adaptForRendering* with *path* as argument. *pathToRender* as we will shortly see is referenced in the template of the directive.
+
+In lines *5-36* the crumbs and crumb separators are generated based on the provided *maxEntries* and *path* values, but this is not where they are rendered, so the method is called *prepareForRendering* rather than *render*. The rendering will happen when the template of the directive will be rendered https://github.com/antivanov/ui-components/blob/master/Angular.js/breadcrumbs/breadcrumbs.tpl.html.
+
+```html
+<div class="breadcrumbs">
+  <span tabindex="{{pathPart.dots ? '' : '0'}}"
+    ng-class="{'crumb':!pathPart.dots,'crumb-separator':pathPart.dots}"
+    ng-click="activatePathPart(pathPart)"
+    ng-keypress="($event.which === 13) && activatePathPart(pathPart)"
+    ng-attr-title="{{pathPart.tooltip ? pathPart.tooltip : ''}}"
+    ng-repeat-start="pathPart in pathToRender">{{pathPart.value}}</span>
+  <span class="crumb-separator" 
+    ng-if="$index < pathToRender.length - 1"
+    ng-repeat-end>&gt;</span>
+</div>
+```
+
+In line *7* *ng-repeat-start* specifies that we iterate over elements *pathPart* in *pathToRender* and for each such *pathPart* we render a *span* which, depending on whether *pathPart.dots* is true or false, has either class *crumb-separator* or just *crumb*.
+
+In line *4* we say that whenever a crumb is clicked *activatePathPart* will be called with the corresponding *pathPart*. Pressing enter is handled in a similar way in line *5*. In line *6* we use *ng-attr-title* directive on the current crumb or crumb separator if there is a tooltip for the current *pathPart*.
+
+Note in this template how we can use directives inside directives in Angular.
+
+To finish our discussion about scopes in regard with the *Breadcrumbs* component, if you were looking carefully, now we have 3 scopes in total (like we noted before it might get a bit complicated at times).
+
+First scope is the scope of the *Path* controller in which the component is used. Next scope is the isolated scope of the component's directive itself. This isolated scope has as its enclosing scope the scope of the *Path* controller. In addition to that we also use a controller *breadcrumbsController* inside our directive that has yet another scope associated with it, and this scope has as its parent scope the isolated scope of the component's directive. So there are 2 different nested scopes used in the *Breadcrumbs* component and one more enclosing scope for the directive. Easy to be confused, so don't despair and browse the Angular documentation if something is not quite clear about the scope nesting.
+
+# **Key points, philosophy behind Angular.js**
+
+Angular is a framework suggest its own very opinionated and conceptually way of developing front end for Web apps. It may be advantageous if you are looking for something to quickly prototype your app or get up and running quickly without getting mired into wiring different libraries and frameworks together.
+
+One minus can be that in a way Angular just provides a set of tools for you to develop your Web app with, and the most interesting part is how you can use all those tools together. There is not always a clear answer to that in the Angular world. This seems to slowly change and even the Angular documenation now includes some of the best practices, but you still may constantly find yourself asking the questions like "How should it be done in Angular? What is the best way conceptually?". And the set of tools that Angular provides may not be the easiest one as we just saw, as it includes quite many of different concepts: scopes, directives, controllers, nesting, updates, dependency injection, services, factories, constants, etc.
+
+A huge plus is built-in testability, provided for by explicitly specifying which dependencies every controller or directive requires. The view update challenge is also solved nicely, eliminating a whole class of bugs when the view and model in a Web app are out of sync. However, due to not always obvious complex scope nesting and updates propagation between different models there can still be some problems there.
+
+Rendering in Angular is a bit more removed from the controllers as we saw in our simple *Breadcrumbs* example. The result of this is that the code gets a bit more complicated as there appears a bit artificial boundary between the data and markup into which this data is transformed.
+
+Like we noted before you may even opt to not use custom directives in your app at all, instead of this building everything with controllers. In a way this is bad, because it does not encourage you to reuse your code as much as you could, since a Web app is not just a set of modular JavaScript "classes" which controllers essentially are, but a set of components that have both the behavior, markup and styles associated with them.
+
+Angular is definitely inspired by Java concepts and brings some of the complexities and patterns associated with enterprise Java development to the JavaScript world. Factories, services, dependency injection - it sounds a lot like a Java app. It might go a bit contrary to the JavaScript core philosophy of keeping things simple and centered around functions. Instead Angular is centered around class-like objects and patterns and tries to redefine the commonly accepted JavaScript development patterns radically. Whether this is a good or a bad thing depends on your personal taste, but some people feel that programming in Angular feels much less like usualy programming using JavaScript.
+
+Like with React we can note that the HTML generated by Angular directives plays the role similar to *shadow DOM* for Web Components, and the tree of Angular components is then analogous to real *DOM*.
+
+I would encourage you to create reusable components with Angular by using its directives when it is appropriate, this will lead to a better structured app and more code reuse. For some reason this is what many people choose not to do on Angular projects and this seems to be not quite right.
+
+# **Existing component libraries**
+
+There are quite a few existing components libraries, for example https://angular-ui.github.io/bootstrap/ and https://material.angularjs.org/#/
+
+# <a name="why-not-jquery"></a>Why not jQuery?
+
+TODO:
 
 # Change of development mental model
 
+TODO:
+
 A lot like functional composition.
+
+# Comparison and summary
+
+TODO
+
+https://pascalprecht.github.io/2014/10/25/integrating-web-components-with-angularjs/
+http://teropa.info/blog/2014/10/24/how-ive-improved-my-angular-apps-by-banning-ng-controller.html
 
 # Notes
 
