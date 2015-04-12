@@ -1,4 +1,14 @@
-# Web App Development Challenges
+[Web App Development Challenges](#web-app-development-challenges)
+[Frameworks, libraries, standards](#frameworks-libraries-standards)
+[Need of Componentization](#need-of-componentization)
+[Web Components](#web-components)
+[Polymer](#polymer)
+[React.js](#react-js)
+[Angular.js](#angular-js)
+
+
+
+# <a name="web-app-development-challenges"></a> Web App Development Challenges
 
 Web applications become ever larger, sophisticated and virtually indistinguishable from desktop apps. In ["JavaScript and Friends: CoffeeScript, Dart and TypeScript"](https://smthngsmwhr.wordpress.com/2013/02/25/javascript-and-friends-coffeescript-dart-and-typescript/) we discussed how JavaScript is adapting to this trend and what alternative languages appeared that trying to address some of the pain points.
 
@@ -26,7 +36,7 @@ However, in this post we are not going to discuss the intricate details of frame
 
 So we will try to stay focused on one particular topic: componentization and discuss some of the philosophy and ideas that various frameworks and libraries embrace in this area but which are unfortunately often lost behind the intricate technical details of APIs they expose or are not emphasized enough and underutilized by developers. For example, I saw at least a few Angular projects that did not reuse as much code as they could have just because they for some reason underutilized the use of custom directives (a bit later we will discuss how those relate to Web Components). After reading this article hopefully you will come out with a better grasp of the subject and also understand that despite superficial differences between APIs some common principles behind are quite similar.
 
-# Frameworks, libraries, standards... 
+# <a name="frameworks-libraries-standards"></a>Frameworks, libraries, standards
 
 In this post we will be talking about, looking into the technical details and comparing Web Components, Polymer, React.js and Angular.js to see how they relate to each other in regard to componentization, and what similarities and differences there are. But before we can do that, we first should establish some initial relationship between this set of technologies and briefly explain what every one of them is and is not. This will simplify further understanding and comparisons.
 
@@ -48,7 +58,7 @@ In this post we will be talking about, looking into the technical details and co
 
 Of course we can cover other frameworks and libraries and even venture to create some site similar to http://todomvc.com/ but this time not for comparing the MVC features but support for componentization. If somebody feels like doing such a site, feel free to fork and extend https://github.com/antivanov/ui-components that contains examples that we will use in this article. We will, however, focus only on those libraries/frameworks listed above as in general 3-4 different examples should already give a good feeling of the way things are done and have some meaningful discussion and comparison.
 
-# Need of Componentization
+# <a name="need-of-componentization"></a>Need of Componentization
 
 You might have heard of domain-specific languages (DSLs) http://martinfowler.com/books/dsl.html and such before in relation to other areas of software development and not necessarily front-end or Web development. Feel free to read more on the subject in case you are interested, although this is not required to understand the present article. In brief the main idea is that in order to solve some challenging problem it often pays off to first create a language in which this problem is then easily solvable. Then having this language will allow you to describe the system and its behavior much easier. One good example would be SQL to manipulate and query data stored in a relational database. Try doing that in your plain code and you will be a world of pain and maintainability nightmare if your data schema and queries are complex enough.
 
@@ -60,13 +70,13 @@ The obvious benefits of creating and using components are better maintainability
 
 Hopefully, by now you are convinced in the potential usefulness of components and would like to know more about the technical details. So far our discussion has been a bit abstract and philosophical, it is right about time to delve into examples and see how these ideas are used in practice.
 
-# Examples
+#### **Examples**
 
 We chose to implement a simple Breadcrumbs component using different technologies listed above on this page with examples http://antivanov.github.io/ui-components
 
 The source code is available here https://github.com/antivanov/ui-components, feel free to check out and modify it, and we will go deeper into various frameworks and libraries in the next sections, as well as will cover some of the code in the examples.
 
-# Web Components
+# <a name="web-components"></a>Web Components
 
 We will start with Web Components, a set of evolving standards and best practices that allow to create and reuse HTML elements. Let's quickly go over some of the standards. The example code https://github.com/antivanov/ui-components/tree/master/WebComponents/breadcrumbs
 
@@ -303,7 +313,7 @@ A very nice thing is that with our new custom element we can just use all the fa
 
 Some browsers do not yet support all of these standards and although Web Components is definitely the future way of creating reusable components, while it still evolves and is being adopted you have to use something else. The first option to consider would be Polymer, a library that brings Web Components support to all browsers and adds some of its own features on top. Arguably even in the future when all browsers support Web Components and the standards matured a lot you will still have to use some higher level library, because standards tend to stay quite generic and low level in order not to overburden the browser developers with more features to support and also leave some flexibility for library developers.
 
-# Polymer
+# <a name="polymer"></a>Polymer
 
 One such library you may use to enable Web Components in your apps is Polymer https://www.polymer-project.org. It enables Web Components for browsers that do not yet support corresponding standards. For example, with minimal changes we can make our Breadcrumbs custom element work in Firefox in addition to Chrome. However, some things will still not work quite the way we would like them to, for example, since there is no shadow DOM implementation yet in Firefox the DOM elements generated by our custom element will be added directly to the DOM and will not be hidden from the client code. The example http://antivanov.github.io/ui-components/Polymer/breadcrumbs/breadcrumbs.demo.html, source code https://github.com/antivanov/ui-components/blob/master/Polymer/breadcrumbs/breadcrumbs.standard.only.html
 
@@ -419,11 +429,244 @@ Another useful thing provided by Polymer which is not shown in this simple examp
 
 For example this Progress bar extends the *core-range* component https://github.com/Polymer/paper-progress/blob/master/paper-progress.html All we need to do to take advantage of an already existing Polymer implementation that we might need, is to include the *extends* attribute to the Polymer component declaration as described in the documentation https://www.polymer-project.org/0.5/docs/polymer/polymer.html#extending-other-elements
 
-#### Existing component libraries
+#### **Existing component libraries**
 
-There are a few components (called "elements" in the Polymer terminology) developed with Polymer by somebody else that you can reuse on your own project. For example, take a look at http://customelements.io where everybody can publish their components. And also Polymer itself provides quite a few ready to use components right out of the box such as https://www.polymer-project.org/0.5/docs/elements/material.html
+There are a few components (called "elements" in the Polymer terminology) developed with Polymer by somebody else that you can reuse on your own project. For example, take a look at http://customelements.io where everybody can publish their components. And also Polymer itself provides quite a few ready to use components right out of the box such as the ones that can be found here https://www.polymer-project.org/0.5/docs/elements/material.html
+
+# <a name="react-js"></a>React.js
+
+While the Web Components standards are still evolving, some libraries try to solve the problem of componentization and code reuse in Web apps in their own way.
+
+One such library is React.js https://facebook.github.io/react/ Besides support for building reusable components it also tries to solve the view update problem *"React implements one-way reactive data flow which reduces boilerplate and is easier to reason about than traditional data binding"*. We will try to explain how React works, but if you wish to read more feel free to follow the tutorial https://facebook.github.io/react/docs/tutorial.html
+
+Authors of React.js have made a few architectural choices that set it apart from other approaches we are discussing in this article.
+
+First, everything is a component, and to build an app one actually has to first think how to split that app into components, how to compose and nest them. This is quite different from using Web Components where you can just optionally define components if you wish to do so, but you can use whatever low level HTML and JavaScript you wish together with it. In our example, even the demo app that uses the Breadcrumbs component we develop is a separate component https://github.com/antivanov/ui-components/blob/master/React.js/breadcrumbs/breadcrumbs.demo.js:
+
+#### **How to define a component, rendering, events, properties and state**
+
+```javascript
+var BreadcrumbsDemo = React.createClass({
+  getContent: function(path) {
+    return path[path.length - 1];
+  },
+  getInitialState: function() {
+    return {
+      path: this.props.path
+    };
+  },
+  onPathChange: function(value) {
+    this.setState({
+      path: value
+    });
+  },
+  reset: function() {
+    this.setState({
+      path: this.props.path
+    });
+  },
+  render: function() {
+    return (
+      <div>
+        <div id="breadcrumb-container">
+          <Breadcrumbs path={this.state.path} maxEntries="5" 
+            onChange={this.onPathChange}/>
+        </div>
+        <div id="content">{this.getContent(this.state.path)}</div>
+        <button id="resetButton" onClick={this.reset}>Reset</button>
+      </div>
+    )
+  }
+});
+
+var fullPath = ['element1', 'element2', 'element3', 'element4',
+  'element5', 'element6', 'element7'];
+
+React.render(
+  <BreadcrumbsDemo path={fullPath}/>,
+  document.querySelector('#container')
+);
+```
+
+The most important part of a component definition is method **render** in lines *20-31* where the component defines how it is rendered. This can include other components like *Breadcrumbs* in line *24* and familiar HTML elements like *div* in line *27*.
+
+We can also parameterize the rendition with the component data which can come from two sources: component state and component properties.
+
+*Properties* of a component should be considered immutable and are passed from a parent component, like it is done in the line *38* where we pass *fullPath* to be used with our *Breadcrumbs* component in the demo. As it can be seen every component has a parent or is a root-level component like our *BreadcrumbsDemo* component.
+
+*State* of a component is something than can be changed during the component lifecycle. Looks like this is a necessary compromise in the design of React.js to still be able to do local changes to a component without propagating them all the way from the root component. However, beware of the state, it should be used very sparingly, and if something can be a property and used by several nested or sibling components, make it an immutable property. Method **getInitialState** in lines *5-8* is used to define what should be the default initial state of *BreadcrumbsDemo*. State can be accessed like in line *27* via the *state* property on the instance of the current component. Setting state is also simple, you just need to call the **setState** method as it is shown in lines *16-18*.
+
+Note that whenever the state or properties of the current component are changed and they are used in the component rendition, then React will re-render component. This is how the *view update* development challenge is solved by React, it will update the view automatically once you declaratively described in the *render* method how it should be done.
+
+In fact, since just rerendering the whole page because one value update is costly and inefficient, React is very smart about updating only those parts of the page that need to be updated, which is completely hidden from us as developers and this is one of the core and most beautiful features of React.
+
+So, in lines *24-25* we create a *Breadcrumbs* component and pass it *this.state.path* as the *path* property which will be accessible in a *Breadcrumbs* instance via *this.props.path*.
+
+React components can use special XML-like JavaScript syntax extension for defining what they are rendered to. This extension is called **JSX** http://facebook.github.io/jsx/ and we just saw what it looks like in lines *22-29* and *38* where we defined a couple of JSX templates.
+
+What about event handling and interactivity? In line *25* we define the *onChange* attribute which is part of the *Breadcrumbs* component public API, whenever the path will change, the event handler *onPathChange* from lines *10-14* will be called. In line *28* we define the *onClick* handler as *this.reset* so that when the button is clicked we reset the component state in lines *15-19*.
+
+You may remember that for quite a while using inline event handlers and having attributes like *onClick* is considered a bad practice when creating HTML markup. But here it is different since what we are defining in a JSX template is not HTML although it looks like it. Internally, React will create a tree of components, so called **virtual DOM** and will take care of event handling optimization, use event delegation when needed, and the generated HTML will not contain any inline event handlers. So in the context of React inline event handlers are just the way to go. And the *div* from line *27* is not actually an HTML element, but a template based on which a React *div* component will be created in *virtual DOM*, and this component will then be rendered as an HTML *div* in *real DOM*.
+
+Note, how we have two parallel structures that coexist in a React application: *real DOM* which is what we are used to and *virtual DOM*, which is a tree of React components. React takes care of rendering the virtual DOM into real DOM and making sure those are in sync with each other.
+
+Going back to Web Components, let's recall the *shadow DOM* concept. For Web Components the component tree is in *real DOM* and implementation details of components such as *video* are hidden in the *shadow DOM* pieces attached to *real DOM*. For React *real DOM* plays the role of *shadow DOM* and the component tree, *virtual DOM*, is just a tree of React components stored in memory. So here we can clearly see certain parallels between Web Components and React.
+
+#### **Breadcrumbs example**
+
+Now that we have a better understanding of inner workings of React.js apps let's revisit our Breadcrumbs example ported to React https://github.com/antivanov/ui-components/blob/master/React.js/breadcrumbs/breadcrumbs.js
+
+First thing we see is how our component is now composed from other components: *Crumb* and *CrumbSeparator*. For example we can have a structure like this:
+
+* Breadcrumbs
+  * Crumb
+  * CrumbSeparator
+  * Crumb
+  * CrumbSeparator
+  * Crumb
+
+In other words, *Breadcrumbs* is just a sequence of interleaving *Crumb* and *CrumbSeparator* components which is what it, in fact, looks like on the screen.
+
+```javascript
+var Crumb = React.createClass({
+  activate: function() {
+    this.props.onSelected(this.props.idx);
+  },
+  onKeyPress: function(event) {
+    if (event.nativeEvent.which == 13) {
+      this.activate();
+    }
+  },
+  render: function() {
+    return (
+      <span className="crumb" tabIndex="0" onKeyPress={this.onKeyPress}
+        onClick={this.activate}>{this.props.value}</span>
+    )
+  }
+});
+
+var CrumbSeparator = React.createClass({
+  render: function() {
+    return (
+      <span className="crumb-separator"
+        title={this.props.tooltip}>{this.props.value}</span>
+    )
+  }
+});
+
+var Breadcrumbs = React.createClass({
+  onSelected: function(idx) {
+    if (idx < 0) {
+      return;
+    }
+    var newPath = this.props.path.slice(0, idx + 1);
+
+    if (newPath.join('/') != this.props.path.join('/')) {
+      this.props.onChange(newPath);
+    }
+  },
+  render: function() {
+    var self = this;
+    var path = this.props.path;
+    var maxEntries = this.props.maxEntries || -1;
+    var hasShortened = false;
+    var crumbs = [];
+
+    path.forEach(function(pathPart, idx) {
+
+      //Skip path entries in the middle
+      if ((maxEntries >= 1) && (idx >= maxEntries - 1) 
+        && (idx < path.length - 1)) {
+
+        //Render the dots separator once
+        if (!hasShortened) {
+          var tooltipParts = path.slice(maxEntries - 1);
+
+          tooltipParts.pop();
+          crumbs.push(
+            <CrumbSeparator value="..." key={idx}
+              tooltip={tooltipParts.join(' > ')}/>,
+            <CrumbSeparator value="&gt;" key={path.length + idx}/>
+          );
+          hasShortened = true;
+        }
+        return;
+      }
+      crumbs.push(
+        <Crumb idx={idx} value={pathPart} key={idx}
+          onSelected={self.onSelected}/>
+      );
+      if (idx != path.length - 1) {
+        crumbs.push(
+          <CrumbSeparator value="&gt;" key={path.length + idx}/>
+        );
+      }
+    });
+
+    return (
+      <div className="breadcrumbs">
+        {crumbs}
+      </div>
+    );
+  }
+});
+```
+
+*CrumbSeparator* component in lines *18-25* is quite simple, it does not have any interactivity and just renders into a *span* with a supplied tooltip and text content.
+
+*Crumb* in lines *1-16* has some handling for key presses and clicks. In lines *2-4* we call the function *this.props.onSelected* with the index of the current crumb *this.props.idx*, both properties have been supplied by the parent *Breadcrumbs* components in the lines *66-67*.
+
+The *Crumb* and *CrumbSeparator* components are quite self-contained and simple, yet they hide some of the low-level details from the *Breadcrumbs* implementation.
+
+In line *67* we specify that *onSelected* function from lines *28-37* should be called whenever a *Crumb* child component is selected. In *onSelected* we just check if the path has changed compared to what *Breadcrumbs* received in its properties in line *34*, and then call the supplied *onChange* handler in line *35*, as you might remember we defined this handler as a property on the current *Breadcrumbs* instance earlier in *BreadcrumbsDemo*.
+
+Then the implementation of the *render* function in lines *38-80* repeats the logic we already saw in earlier examples for Polymer and Web Components. Note how we can construct the JSX template dynamically in lines *66-67*, *70-71* and inline parts of it later in line *78*. Lines *48-64* deal with the case when the Breadcrumbs component has a specified *maxEntries* property.
+
+Note, how the example is simpler and cleaner than what we did before even with Polymer. This is because quite a many low-level details such as rendering templates and binding data to the views are done for us by React which seems to be a nice bonus to componentization we get.
+
+#### **Key points, philosophy behind React.js**
+
+Let's outline some of the keypoints that the example above demonstrates, we will re-iterate some of them a bit later when we compare different approaches with each other.
+
+React.js is a view only library that solves the challenge of binding data to view and creating reusable component. Data is transformed by React into a component tree and then this tree is transformed into HTML.
+
+Every React component can be viewed as a **function** that takes some arguments via its properties and returns a new value that can include some other React components or React equivalents to HTML elements such as &lt;div&gt;.
+
+Composing your app from React components is quite similar to composing about any program from functions. React encourages a functional style where component definitions are declarative and React handles the low-level details how to make this functional definition of an app work efficiently. Feel free to read more about functional programming http://en.wikipedia.org/wiki/Functional_programming
+
+When looking at React.js one can clearly see certain similarities with a domain specific language for solving a specific problem created in Lisp http://en.wikipedia.org/wiki/Lisp_%28programming_language%29. Just the brackets are a bit different, instead of () it is &lt;&gt; and also React is not general purpose language, but just a view library.
+
+As JavaScript was in part inspired by Scheme (dialect of Lisp) http://en.wikipedia.org/wiki/Scheme_%28programming_language%29 and gives a lot of attention and flexibility to functions, React feels quite natural to use and is following the underlying language philosophy in this regard.
+It is very easy to compose and nest functions in JavaScript, and so it is to compose and nest components in React.js. React.js does not try to redefine JavaScript or impose its own vision of the language like Angular.js does to some extent.
+
+But JavaScript is not quite a functional language unlike, for example, Haskell, due to the presence of mutable shared state, so we have to take extra measures when using React to make sure that we do not modify things such as component properties, and more development discipline and effort is required in this respect.
+
+React.js provides a declarative, functional, powerful mechanism of composition and abstraction and is conceptually quite simple because of this.
+
+One minus is that React.js is non-standard, does things in its own way, and the components we create will be reusable only in a React app. Although React is much less intrusive than, say, Angular.js which we will discuss in the next section, and does not dictate how the whole app should be structured. Instead it focuses on a few things: componentization and view updates and solves them.
+
+Another minus is that CSS is still not modular, and unlike in Web Components, styles live completely separately from the JavaScript part of the app.
+
+#### **Flux**
+
+In addition to the view part represented by React, one can also choose to follow the default app arhitecture recommend for React. This architecture is called **Flux** https://facebook.github.io/flux/ and ensures that the data flows to your React components in an organized manner via one control point. React itself just defines how data should be transformed into HTML, and it does not say much about what should be the data lifecycle in the app, Flux tries to complement this gap. But, of course, you can choose any MVC framework you like and use it with React.
+
+#### **Existing component libraries**
+
+You can search for React components here http://react-components.com/ or use React Bootstrap http://react-bootstrap.github.io/components.html or React Material https://github.com/SanderSpies/react-material
+
+# <a name="angular-js"></a>Angular.js
 
 TODO
+
+Plus: everything is included.
+
+Minus: tries to redefine JavaScript, make it look more like Java.
+Minus: cascading updates, which scope is which.
+
+# Change of development mental model
+
+A lot like functional composition.
 
 # Notes
 
@@ -445,4 +688,8 @@ Shadow DOM in WebComponents  real generated HTML for React.js and Angular
 
 React and Angular lock you in into using them, React less so
 
+React and Angular handle templating, data binding, etc.
+
 Web Components standards give you complete freedom what libraries or frameworks you may choose to use
+
+Other libraries and frameworks that allow to create components
