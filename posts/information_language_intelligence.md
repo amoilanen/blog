@@ -33,6 +33,7 @@ Information encoded in one particular language can then be encoded again in anot
 Formality and applicability as we defined them are own properties of the language itself and do not change depending on the agent trying to interpret the language, but simplicity is a subjective quality attributed to the language by a particular agent.
 
 ##Intelligence
+---
 
 Informally __intelligence__ is the ability to interpret information by a given agent. In order to do that the agent should be able to construct and understand different encodings of information (different languages). These languages for a given agent should be simple enough and at the same time remain formal and applicable enough for the given subset of information. Then __intelligence__ can be defined as the ability to construct and understand languages and is fully defined by a set of all such possible languages.
 
@@ -88,6 +89,7 @@ How can the human intelligence be expanded or improved? In order to be able to c
 Another way that follows directly from the definition of intelligence is trying to make the constructed languages simple enough by using appropriate tools. It can be that some particular language is already formal and applicable in the desired domain but at the same time it is not simple enough and requires a lot of computational resources or memory that an average human does not possess. Historically for this purpose humans would use computers of different kinds, starting from abacus a few thousand years ago and ending in present with the digital machines built according to the von Neumann architecture.
 
 ##Beyond human intelligence
+---
 
 The ability to understand languages is not unique to humans as there are other intelligences. There are much simpler ones created by humans themselves such as, for example, an executable computer program that can understand only a very limited set of inputs. Every such program can also be viewed as just a piece of information encoded by humans using some of the languages that humans understand but the resulting computer program obviously does not.
 
@@ -135,11 +137,11 @@ Is singularity possible or even inevitable? It is hard to find a definite answer
 
 At the point of singularity the created intelligence will have to be able to:
 
-* Pass the Turing test
-* Create new languages and categories for encoding the information it has not yet encountered when it has been created
-* Produce the artefacts expressed in visual art, literature, and music comparable to those made by humans
-* Learn and proficiently use any human language
-* Attain perfect knowledge of self so that it can create a new intelligence comparable to that of a human or replicate itself
+* pass the Turing test
+* create new languages and categories for encoding the information it has not yet encountered when it had been created
+* produce the artefacts expressed in visual art, literature, and music comparable to those made by humans
+* learn and proficiently use any human language
+* attain perfect knowledge of self so that it can create a new intelligence comparable to that of a human or replicate itself
 
 Intelligence is considered to be 'greater' than some other intelligence if all the languages understood by another intelligence are also understood by it. Most likely the following hypothesis also holds true:
 
@@ -152,7 +154,7 @@ Note, that at the same time this hypothesis allows for constructing the intellig
 
 Another aspect that is often omitted or misunderstood when talking about singularity is that the human intelligence as what we perceive it to be 'at present' may be underestimated and 'in the future' humans will be able to construct much more advanced languages with the help of computing devices or other yet not discovered technologies. Even if it is not possible for humans to create a greater or equal intelligence it is still possible to try to develop the human intelligence itself further. In fact the boundaries of the human intelligence and the types of languages that can be constructed by it are still not understood well enough by the modern human science.
 
-##Further research
+##Directions for further research
 
 The present essay tries to give a linguistic definition of intelligence and expand on the ideas first suggested by Alan Turing.
 
@@ -160,8 +162,8 @@ However, we have barely touched the surface on many of the topics and the discus
 
 Can we use a formal symbolic notation to try to define the concepts discussed and to build a formal mathematical theory that will model them? This can also be done, but we should be mindful of the hypothesis 1 (connection between applicability, simplicity and formality) and understand that our discussion may be unnecessarily narrowed down because of this. Also when striving for ultimate formality and strictness we should remember the Gödel theorem that shows that even the language of general relational logic is not formal enough and ultimate formality likely cannot be attained anyway. These are some of the reasons why we chose not to use any formal symbolic notation in the present essay, although this direction can certainly be researched further and we may be able to get more insight for some particular cases like it has been done in many other fields of mathematics and physics.
 
-Historically and especially in the last few of centuries the research in many fields has been too centered on the humans, which probably is no surprize, given that all such reseach was performed by humans. As we saw in the essay the human intelligence is just one particular case of intelligence in general and it may be wrong to focus exclusively on human intelligence when trying to understand intelligence in general. Even the question whether 'the present' human level of intelligence can be exceeded by some machine may not be all that important as it seems at first and instead the further research can focus on other interesting related questions in the field of intelligence. But still it is possible to do further research on the intelligence of groups of people, how intelligence seems to evolve and what role the surrounding conditions can play.
+Historically and especially in the last few centuries the research in many fields has been too centered on humans, which probably is no surprise, given that all such research was performed by humans. As we saw in the essay the human intelligence is just one particular case of intelligence in general and it may be wrong to focus exclusively on human intelligence when trying to understand intelligence in general. Even the question whether 'the present' human level of intelligence can be exceeded by some machine may not be all that important as it seems at first and instead the further research can focus on other interesting related questions in the field of intelligence. But still it is possible to do further research on the intelligence of groups of people, how intelligence seems to evolve and what role the surrounding conditions can play.
 
-Equally it seems to be wrong to consider machine intelligence separate from human intelligence or other kinds of possible intelligence. In particular we disscussed that the intelligence is defined by the set of languages that are understood by it and not by an individual agent or whether this agent has a silicon, bionic or some other nature.
+Equally it seems to be wrong to consider machine intelligence separate from human intelligence or other kinds of possible intelligence. In particular we disscussed that the intelligence is defined by the set of languages that are understood by it and not by an individual agent or whether this agent has a silicon, biological or some other nature.
 
 Yet another possible research direction involves sudying the relationship between different languages, what translation between languages can really mean, what metrics can we introduce for the way information is encoded by a particular language, and what classes of languages there are. An important thing is that in any such research languages should be understood in the broader sense that we used here.
