@@ -1,0 +1,19 @@
+title: Something Somewhere
+description: A blog about software development, programming languages, and computer science
+baseurl: /blog
+url: https://amoilanen.github.io
+
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+permalink: /:year/:month/:day/:title/
+
+exclude:
+  - LICENSE
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - smthngsmwhr.wordpress.com
+  - posts

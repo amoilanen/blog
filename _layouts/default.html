@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title }} - {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      color: #333;
+      background: #fdfdfd;
+      line-height: 1.7;
+    }
+
+    a {
+      color: #2a6496;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .site-header {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 1.5rem 2rem;
+    }
+
+    .site-header h1 {
+      font-size: 1.6rem;
+      font-weight: normal;
+    }
+
+    .site-header h1 a {
+      color: #ecf0f1;
+    }
+
+    .site-header p {
+      font-size: 0.9rem;
+      color: #bdc3c7;
+      margin-top: 0.25rem;
+    }
+
+    .container {
+      display: flex;
+      max-width: 1100px;
+      margin: 2rem auto;
+      padding: 0 1.5rem;
+      gap: 3rem;
+    }
+
+    .sidebar {
+      flex: 0 0 220px;
+      font-size: 0.85rem;
+    }
+
+    .sidebar h3 {
+      font-size: 0.95rem;
+      color: #2c3e50;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 0.25rem;
+    }
+
+    .sidebar .year-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .sidebar .year-label {
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 0.25rem;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .sidebar li {
+      margin-bottom: 0.3rem;
+      line-height: 1.4;
+    }
+
+    .sidebar li a {
+      color: #2a6496;
+    }
+
+    .content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .content h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      color: #2c3e50;
+    }
+
+    .content h2 {
+      font-size: 1.4rem;
+      margin-top: 2rem;
+      margin-bottom: 0.75rem;
+      color: #2c3e50;
+    }
+
+    .content h3 {
+      font-size: 1.15rem;
+      margin-top: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: #2c3e50;
+    }
+
+    .content p {
+      margin-bottom: 1rem;
+    }
+
+    .content ul, .content ol {
+      margin-bottom: 1rem;
+      padding-left: 1.5rem;
+    }
+
+    .content li {
+      margin-bottom: 0.3rem;
+    }
+
+    .content img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .content blockquote {
+      border-left: 3px solid #2c3e50;
+      padding: 0.5rem 1rem;
+      margin: 1rem 0;
+      color: #555;
+      background: #f9f9f9;
+    }
+
+    /* Code styling */
+    .content code {
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 0.9em;
+      background: #f4f4f4;
+      padding: 0.15em 0.35em;
+      border-radius: 3px;
+    }
+
+    .content pre {
+      background: #f4f4f4;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 1rem;
+      overflow-x: auto;
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+
+    .content pre code {
+      background: none;
+      padding: 0;
+      font-size: 0.85em;
+    }
+
+    .post-date {
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .site-footer {
+      text-align: center;
+      padding: 2rem;
+      color: #888;
+      font-size: 0.8rem;
+      border-top: 1px solid #eee;
+      margin-top: 3rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .sidebar {
+        flex: none;
+        width: 100%;
+        border-bottom: 1px solid #ddd;
+        padding-bottom: 1.5rem;
+      }
+
+      .content h1 {
+        font-size: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <h1><a href="{{ site.baseurl }}/">{{ site.title }}</a></h1>
+    <p>{{ site.description }}</p>
+  </header>
+
+  <div class="container">
+    <nav class="sidebar">
+      <h3>Posts</h3>
+      {% assign posts_by_year = site.posts | group_by_exp: "post", "post.date | date: '%Y'" %}
+      {% for year in posts_by_year %}
+      <div class="year-group">
+        <div class="year-label">{{ year.name }}</div>
+        <ul>
+          {% for post in year.items %}
+          <li><a href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endfor %}
+    </nav>
+
+    <main class="content">
+      {% if page.title %}
+      <h1>{{ page.title }}</h1>
+      {% if page.date %}
+      <div class="post-date">{{ page.date | date: "%B %d, %Y" }}</div>
+      {% endif %}
+      {% endif %}
+
+      {{ content }}
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    &copy; {{ site.time | date: '%Y' }} {{ site.title }}
+  </footer>
+</body>
+</html>
