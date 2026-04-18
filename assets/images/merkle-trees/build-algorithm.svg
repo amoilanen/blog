@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 500" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="13">
+  <defs>
+    <linearGradient id="stepG" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="hashG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="pairG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="rootBuild" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <filter id="sh5" x="-2%" y="-3%" width="104%" height="112%">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.1"/>
+    </filter>
+    <marker id="arrowDown" viewBox="0 0 10 10" refX="5" refY="10" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0 L5,10 L10,0 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="360" y="24" text-anchor="middle" font-size="16" font-weight="600" fill="#1e293b">Bottom-Up Construction: Building a Merkle Tree</text>
+
+  <!-- Step 1: Raw data -->
+  <g filter="url(#sh5)">
+    <rect x="10" y="45" width="80" height="26" rx="13" fill="url(#stepG)"/>
+    <text x="50" y="63" text-anchor="middle" fill="white" font-weight="700" font-size="11">Step 1</text>
+  </g>
+  <text x="100" y="63" fill="#475569" font-size="12">Hash each leaf with domain separation: SHA-256(0x00 ‖ data)</text>
+
+  <g transform="translate(0, 82)">
+    <!-- Raw data -->
+    <g filter="url(#sh5)">
+      <rect x="40" y="0" width="80" height="28" rx="5" fill="#f1f5f9" stroke="#cbd5e1"/>
+      <text x="80" y="19" text-anchor="middle" fill="#475569" font-size="12" font-family="monospace">"tx0"</text>
+    </g>
+    <g filter="url(#sh5)">
+      <rect x="140" y="0" width="80" height="28" rx="5" fill="#f1f5f9" stroke="#cbd5e1"/>
+      <text x="180" y="19" text-anchor="middle" fill="#475569" font-size="12" font-family="monospace">"tx1"</text>
+    </g>
+    <g filter="url(#sh5)">
+      <rect x="240" y="0" width="80" height="28" rx="5" fill="#f1f5f9" stroke="#cbd5e1"/>
+      <text x="280" y="19" text-anchor="middle" fill="#475569" font-size="12" font-family="monospace">"tx2"</text>
+    </g>
+    <g filter="url(#sh5)">
+      <rect x="340" y="0" width="80" height="28" rx="5" fill="#f1f5f9" stroke="#cbd5e1"/>
+      <text x="380" y="19" text-anchor="middle" fill="#475569" font-size="12" font-family="monospace">"tx3"</text>
+    </g>
+
+    <!-- Arrows with extra gap -->
+    <line x1="80" y1="28" x2="80" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+    <line x1="180" y1="28" x2="180" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+    <line x1="280" y1="28" x2="280" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+    <line x1="380" y1="28" x2="380" y2="50" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+
+    <!-- Leaf hashes -->
+    <g filter="url(#sh5)">
+      <rect x="30" y="56" width="100" height="28" rx="5" fill="url(#hashG)"/>
+      <text x="80" y="75" text-anchor="middle" fill="white" font-weight="600" font-size="11">H0 = a3f2…</text>
+    </g>
+    <g filter="url(#sh5)">
+      <rect x="130" y="56" width="100" height="28" rx="5" fill="url(#hashG)"/>
+      <text x="180" y="75" text-anchor="middle" fill="white" font-weight="600" font-size="11">H1 = 7b91…</text>
+    </g>
+    <g filter="url(#sh5)">
+      <rect x="230" y="56" width="100" height="28" rx="5" fill="url(#hashG)"/>
+      <text x="280" y="75" text-anchor="middle" fill="white" font-weight="600" font-size="11">H2 = e4c8…</text>
+    </g>
+    <g filter="url(#sh5)">
+      <rect x="330" y="56" width="100" height="28" rx="5" fill="url(#hashG)"/>
+      <text x="380" y="75" text-anchor="middle" fill="white" font-weight="600" font-size="11">H3 = 1d5f…</text>
+    </g>
+  </g>
+
+  <!-- Step 2: Pair and hash -->
+  <g filter="url(#sh5)">
+    <rect x="10" y="190" width="80" height="26" rx="13" fill="url(#stepG)"/>
+    <text x="50" y="208" text-anchor="middle" fill="white" font-weight="700" font-size="11">Step 2</text>
+  </g>
+  <text x="100" y="208" fill="#475569" font-size="12">Pair adjacent nodes, hash with: SHA-256(0x01 ‖ left ‖ right)</text>
+
+  <g transform="translate(0, 228)">
+    <!-- Pairing brackets drawn below "pair" text -->
+    <text x="130" y="0" text-anchor="middle" fill="#8b5cf6" font-size="10" font-weight="600">pair</text>
+    <text x="330" y="0" text-anchor="middle" fill="#8b5cf6" font-size="10" font-weight="600">pair</text>
+
+    <path d="M80,8 L80,16 L180,16 L180,8" stroke="#8b5cf6" stroke-width="2" fill="none"/>
+    <path d="M280,8 L280,16 L380,16 L380,8" stroke="#8b5cf6" stroke-width="2" fill="none"/>
+
+    <!-- Arrows -->
+    <line x1="130" y1="16" x2="130" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+    <line x1="330" y1="16" x2="330" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+
+    <!-- Internal hashes -->
+    <g filter="url(#sh5)">
+      <rect x="55" y="42" width="150" height="28" rx="5" fill="url(#pairG)"/>
+      <text x="130" y="61" text-anchor="middle" fill="white" font-weight="600" font-size="11">H01 = b137…</text>
+    </g>
+    <g filter="url(#sh5)">
+      <rect x="255" y="42" width="150" height="28" rx="5" fill="url(#pairG)"/>
+      <text x="330" y="61" text-anchor="middle" fill="white" font-weight="600" font-size="11">H23 = 9af4…</text>
+    </g>
+  </g>
+
+  <!-- Step 3: Final pair → root -->
+  <g filter="url(#sh5)">
+    <rect x="10" y="310" width="80" height="26" rx="13" fill="url(#stepG)"/>
+    <text x="50" y="328" text-anchor="middle" fill="white" font-weight="700" font-size="11">Step 3</text>
+  </g>
+  <text x="100" y="328" fill="#475569" font-size="12">One pair left → hash to produce the root</text>
+
+  <g transform="translate(0, 346)">
+    <text x="230" y="0" text-anchor="middle" fill="#d97706" font-size="10" font-weight="600">final pair</text>
+    <path d="M130,8 L130,16 L330,16 L330,8" stroke="#d97706" stroke-width="2" fill="none"/>
+
+    <line x1="230" y1="16" x2="230" y2="36" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrowDown)"/>
+
+    <g filter="url(#sh5)">
+      <rect x="130" y="42" width="200" height="32" rx="6" fill="url(#rootBuild)"/>
+      <text x="230" y="63" text-anchor="middle" fill="white" font-weight="700" font-size="12">Root = 3337…</text>
+    </g>
+  </g>
+
+  <!-- Right side: levels array -->
+  <g transform="translate(480, 60)">
+    <text x="110" y="0" text-anchor="middle" font-size="14" font-weight="600" fill="#1e293b">Stored as levels[]</text>
+
+    <g filter="url(#sh5)">
+      <rect x="10" y="16" width="210" height="30" rx="5" fill="url(#rootBuild)"/>
+      <text x="115" y="36" text-anchor="middle" fill="white" font-weight="600" font-size="11">levels[0]: [Root]</text>
+    </g>
+    <g filter="url(#sh5)">
+      <rect x="10" y="56" width="210" height="30" rx="5" fill="url(#pairG)"/>
+      <text x="115" y="76" text-anchor="middle" fill="white" font-weight="600" font-size="11">levels[1]: [H01, H23]</text>
+    </g>
+    <g filter="url(#sh5)">
+      <rect x="10" y="96" width="210" height="30" rx="5" fill="url(#hashG)"/>
+      <text x="115" y="116" text-anchor="middle" fill="white" font-weight="600" font-size="11">levels[2]: [H0, H1, H2, H3]</text>
+    </g>
+
+    <text x="115" y="152" text-anchor="middle" fill="#64748b" font-size="11">Root at index 0</text>
+    <text x="115" y="170" text-anchor="middle" fill="#64748b" font-size="11">Leaves at last index</text>
+    <text x="115" y="198" text-anchor="middle" fill="#64748b" font-size="11" font-style="italic">Enables proof generation by</text>
+    <text x="115" y="216" text-anchor="middle" fill="#64748b" font-size="11" font-style="italic">walking from leaf upward</text>
+  </g>
+
+  <!-- Bottom note -->
+  <g transform="translate(40, 440)">
+    <rect x="0" y="0" width="640" height="48" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="320" y="18" text-anchor="middle" fill="#475569" font-size="12" font-weight="500">Time complexity: O(n) — each leaf is hashed once, each level halves the node count.</text>
+    <text x="320" y="36" text-anchor="middle" fill="#475569" font-size="12">Space: O(n) total hashes stored across ⌈log₂(n)⌉ + 1 levels.</text>
+  </g>
+</svg>

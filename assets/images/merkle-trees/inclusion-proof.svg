@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="13">
+  <defs>
+    <linearGradient id="rootG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="pathG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="siblingG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="100%" stop-color="#e11d48"/>
+    </linearGradient>
+    <linearGradient id="dimG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#cbd5e1"/>
+      <stop offset="100%" stop-color="#94a3b8"/>
+    </linearGradient>
+    <linearGradient id="targetG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <filter id="sh" x="-4%" y="-4%" width="108%" height="116%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Title -->
+  <text x="360" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#1e293b">Inclusion Proof for tx2</text>
+
+  <!-- Edges drawn FIRST so nodes paint on top -->
+  <g fill="none">
+    <!-- Active path edges (green) -->
+    <line x1="360" y1="90" x2="520" y2="165" stroke="#059669" stroke-width="3"/>
+    <line x1="520" y1="205" x2="440" y2="270" stroke="#059669" stroke-width="3"/>
+    <!-- Dimmed edges -->
+    <line x1="360" y1="90" x2="200" y2="165" stroke="#cbd5e1" stroke-width="1.5"/>
+    <line x1="200" y1="205" x2="120" y2="270" stroke="#cbd5e1" stroke-width="1.5"/>
+    <line x1="200" y1="205" x2="280" y2="270" stroke="#cbd5e1" stroke-width="1.5"/>
+    <line x1="520" y1="205" x2="600" y2="270" stroke="#cbd5e1" stroke-width="1.5"/>
+    <!-- Data connectors -->
+    <line x1="120" y1="308" x2="120" y2="348" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="280" y1="308" x2="280" y2="348" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="440" y1="308" x2="440" y2="348" stroke="#059669" stroke-width="2" stroke-dasharray="4,3"/>
+    <line x1="600" y1="308" x2="600" y2="348" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+  </g>
+
+  <!-- Root node -->
+  <g filter="url(#sh)">
+    <rect x="290" y="48" width="140" height="44" rx="8" fill="url(#rootG)"/>
+    <text x="360" y="67" text-anchor="middle" fill="white" font-weight="600">Root Hash</text>
+    <text x="360" y="83" text-anchor="middle" fill="#c7d2fe" font-size="10">verifier compares ↑</text>
+  </g>
+
+  <!-- H01 - SIBLING (provided in proof) -->
+  <g filter="url(#sh)">
+    <rect x="130" y="165" width="140" height="42" rx="8" fill="url(#siblingG)"/>
+    <text x="200" y="183" text-anchor="middle" fill="white" font-weight="600">H01 ★</text>
+    <text x="200" y="200" text-anchor="middle" fill="#fecdd3" font-size="10">proof step 2</text>
+  </g>
+
+  <!-- H23 - computed by verifier -->
+  <g filter="url(#sh)">
+    <rect x="450" y="165" width="140" height="42" rx="8" fill="url(#pathG)"/>
+    <text x="520" y="183" text-anchor="middle" fill="white" font-weight="600">H23</text>
+    <text x="520" y="200" text-anchor="middle" fill="#d1fae5" font-size="10">verifier computes</text>
+  </g>
+
+  <!-- H0, H1 - dimmed -->
+  <g filter="url(#sh)">
+    <rect x="70" y="270" width="100" height="40" rx="8" fill="url(#dimG)"/>
+    <text x="120" y="295" text-anchor="middle" fill="white" font-weight="600">H0</text>
+  </g>
+  <g filter="url(#sh)">
+    <rect x="230" y="270" width="100" height="40" rx="8" fill="url(#dimG)"/>
+    <text x="280" y="295" text-anchor="middle" fill="white" font-weight="600">H1</text>
+  </g>
+
+  <!-- H2 - the leaf we are proving (on the verification path) -->
+  <g filter="url(#sh)">
+    <rect x="390" y="270" width="100" height="40" rx="8" fill="url(#pathG)"/>
+    <text x="440" y="295" text-anchor="middle" fill="white" font-weight="600">H2</text>
+  </g>
+
+  <!-- H3 - SIBLING (provided in proof) -->
+  <g filter="url(#sh)">
+    <rect x="550" y="270" width="100" height="40" rx="8" fill="url(#siblingG)"/>
+    <text x="600" y="283" text-anchor="middle" fill="white" font-weight="600">H3 ★</text>
+    <text x="600" y="300" text-anchor="middle" fill="#fecdd3" font-size="10">proof step 1</text>
+  </g>
+
+  <!-- Data blocks -->
+  <g filter="url(#sh)">
+    <rect x="70" y="352" width="100" height="30" rx="6" fill="#e2e8f0"/>
+    <text x="120" y="372" text-anchor="middle" fill="#64748b" font-weight="500">tx0</text>
+  </g>
+  <g filter="url(#sh)">
+    <rect x="230" y="352" width="100" height="30" rx="6" fill="#e2e8f0"/>
+    <text x="280" y="372" text-anchor="middle" fill="#64748b" font-weight="500">tx1</text>
+  </g>
+  <g filter="url(#sh)">
+    <rect x="390" y="352" width="100" height="30" rx="6" fill="url(#targetG)"/>
+    <text x="440" y="372" text-anchor="middle" fill="white" font-weight="700">tx2</text>
+  </g>
+  <g filter="url(#sh)">
+    <rect x="550" y="352" width="100" height="30" rx="6" fill="#e2e8f0"/>
+    <text x="600" y="372" text-anchor="middle" fill="#64748b" font-weight="500">tx3</text>
+  </g>
+
+  <!-- Verification steps annotation -->
+  <g transform="translate(30, 405)">
+    <rect x="0" y="-14" width="380" height="92" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="12" y="4" fill="#1e293b" font-size="13" font-weight="600">Verification steps:</text>
+    <text x="12" y="24" fill="#475569" font-size="12">1. Compute H2 = hash_leaf(tx2)</text>
+    <text x="12" y="42" fill="#475569" font-size="12">2. Combine: H23 = hash_pair(H2, H3★)</text>
+    <text x="12" y="60" fill="#475569" font-size="12">3. Combine: Root' = hash_pair(H01★, H23)</text>
+    <text x="12" y="78" fill="#475569" font-size="12">4. Check: Root' == Root?  ✓</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(440, 405)">
+    <rect x="-10" y="-14" width="260" height="92" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+    <rect x="4" y="2" width="14" height="14" rx="3" fill="url(#pathG)"/>
+    <text x="24" y="14" fill="#475569" font-size="11">Verification path (computed)</text>
+    <rect x="4" y="24" width="14" height="14" rx="3" fill="url(#siblingG)"/>
+    <text x="24" y="36" fill="#475569" font-size="11">Siblings in proof (★ provided)</text>
+    <rect x="4" y="46" width="14" height="14" rx="3" fill="url(#targetG)"/>
+    <text x="24" y="58" fill="#475569" font-size="11">Target leaf data</text>
+    <rect x="4" y="68" width="14" height="14" rx="3" fill="url(#dimG)"/>
+    <text x="24" y="80" fill="#475569" font-size="11">Not needed for verification</text>
+  </g>
+</svg>

@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 460" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="13">
+  <defs>
+    <linearGradient id="fullG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="lightG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="headerG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0fdf4"/>
+      <stop offset="100%" stop-color="#dcfce7"/>
+    </linearGradient>
+    <linearGradient id="blockG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#eff6ff"/>
+      <stop offset="100%" stop-color="#dbeafe"/>
+    </linearGradient>
+    <filter id="sh4" x="-2%" y="-3%" width="104%" height="112%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowGreenSPV" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="360" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#1e293b">Simplified Payment Verification (SPV)</text>
+
+  <!-- Full Node -->
+  <g filter="url(#sh4)">
+    <rect x="30" y="50" width="280" height="340" rx="12" fill="white" stroke="#3b82f6" stroke-width="2"/>
+    <rect x="30" y="50" width="280" height="40" rx="12" fill="url(#fullG)"/>
+    <rect x="30" y="78" width="280" height="12" fill="url(#fullG)"/>
+    <text x="170" y="76" text-anchor="middle" fill="white" font-weight="700" font-size="15">Full Node</text>
+    <text x="170" y="108" text-anchor="middle" fill="#64748b" font-size="11">Stores everything</text>
+  </g>
+
+  <!-- Block 1 in full node -->
+  <g filter="url(#sh4)">
+    <rect x="50" y="122" width="240" height="80" rx="8" fill="url(#blockG)" stroke="#93c5fd" stroke-width="1"/>
+    <text x="60" y="142" fill="#2563eb" font-weight="600" font-size="12">Block 1</text>
+    <text x="60" y="160" fill="#475569" font-size="11">Header: prev_hash, merkle_root, …</text>
+    <text x="60" y="176" fill="#475569" font-size="11">Transactions: tx0, tx1, tx2, tx3, tx4</text>
+    <text x="60" y="192" fill="#475569" font-size="11">Merkle tree: all levels stored</text>
+  </g>
+
+  <!-- Block 2 in full node -->
+  <g filter="url(#sh4)">
+    <rect x="50" y="210" width="240" height="80" rx="8" fill="url(#blockG)" stroke="#93c5fd" stroke-width="1"/>
+    <text x="60" y="230" fill="#2563eb" font-weight="600" font-size="12">Block 2</text>
+    <text x="60" y="248" fill="#475569" font-size="11">Header: prev_hash, merkle_root, …</text>
+    <text x="60" y="264" fill="#475569" font-size="11">Transactions: tx0, tx1</text>
+    <text x="60" y="280" fill="#475569" font-size="11">Merkle tree: all levels stored</text>
+  </g>
+
+  <!-- Block N -->
+  <text x="170" y="310" text-anchor="middle" fill="#94a3b8" font-size="13">⋮</text>
+  <g filter="url(#sh4)">
+    <rect x="50" y="320" width="240" height="50" rx="8" fill="url(#blockG)" stroke="#93c5fd" stroke-width="1"/>
+    <text x="60" y="340" fill="#2563eb" font-weight="600" font-size="12">Block N</text>
+    <text x="60" y="356" fill="#475569" font-size="11">Header + all transactions + Merkle tree</text>
+  </g>
+
+  <!-- Light Node -->
+  <g filter="url(#sh4)">
+    <rect x="410" y="50" width="280" height="340" rx="12" fill="white" stroke="#059669" stroke-width="2"/>
+    <rect x="410" y="50" width="280" height="40" rx="12" fill="url(#lightG)"/>
+    <rect x="410" y="78" width="280" height="12" fill="url(#lightG)"/>
+    <text x="550" y="76" text-anchor="middle" fill="white" font-weight="700" font-size="15">Light Node (SPV)</text>
+    <text x="550" y="108" text-anchor="middle" fill="#64748b" font-size="11">Stores only block headers</text>
+  </g>
+
+  <!-- Headers in light node -->
+  <g filter="url(#sh4)">
+    <rect x="430" y="122" width="240" height="44" rx="8" fill="url(#headerG)" stroke="#86efac" stroke-width="1"/>
+    <text x="440" y="142" fill="#059669" font-weight="600" font-size="12">Block 1 Header</text>
+    <text x="440" y="158" fill="#475569" font-size="11">merkle_root: 33376a…</text>
+  </g>
+
+  <g filter="url(#sh4)">
+    <rect x="430" y="176" width="240" height="44" rx="8" fill="url(#headerG)" stroke="#86efac" stroke-width="1"/>
+    <text x="440" y="196" fill="#059669" font-weight="600" font-size="12">Block 2 Header</text>
+    <text x="440" y="212" fill="#475569" font-size="11">merkle_root: a8f29b…</text>
+  </g>
+
+  <text x="550" y="244" text-anchor="middle" fill="#94a3b8" font-size="13">⋮</text>
+
+  <g filter="url(#sh4)">
+    <rect x="430" y="254" width="240" height="44" rx="8" fill="url(#headerG)" stroke="#86efac" stroke-width="1"/>
+    <text x="440" y="274" fill="#059669" font-weight="600" font-size="12">Block N Header</text>
+    <text x="440" y="290" fill="#475569" font-size="11">merkle_root: f7e3c1…</text>
+  </g>
+
+  <!-- Size comparison -->
+  <g filter="url(#sh4)">
+    <rect x="430" y="315" width="240" height="55" rx="8" fill="#f0fdf4" stroke="#86efac" stroke-width="1"/>
+    <text x="550" y="336" text-anchor="middle" fill="#059669" font-weight="600" font-size="12">Storage: ~60 MB</text>
+    <text x="550" y="354" text-anchor="middle" fill="#64748b" font-size="11">80 bytes × ~900K headers</text>
+  </g>
+
+  <!-- Arrows between nodes — positioned to avoid overlap -->
+  <g>
+    <!-- Request proof (upper arrow) -->
+    <line x1="410" y1="163" x2="316" y2="163" stroke="#3b82f6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+    <!-- Label with background pill -->
+    <rect x="332" y="146" width="60" height="16" rx="4" fill="white" fill-opacity="0.95"/>
+    <text x="362" y="158" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="600">request</text>
+
+    <!-- Return proof (lower arrow, well separated) -->
+    <line x1="310" y1="240" x2="404" y2="240" stroke="#059669" stroke-width="2" marker-end="url(#arrowGreenSPV)"/>
+    <!-- Label with background pill -->
+    <rect x="318" y="224" width="76" height="16" rx="4" fill="white" fill-opacity="0.95"/>
+    <text x="356" y="236" text-anchor="middle" fill="#059669" font-size="10" font-weight="600">Merkle proof</text>
+  </g>
+
+  <!-- Bottom annotation -->
+  <g transform="translate(40, 410)">
+    <rect x="-10" y="-12" width="650" height="46" rx="8" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="315" y="4" text-anchor="middle" fill="#475569" font-size="12">The light node verifies the proof locally against its stored Merkle root — no trust in the full node required.</text>
+    <text x="315" y="22" text-anchor="middle" fill="#475569" font-size="12">If the proof is fraudulent, it simply won't match the root hash. The math either checks out or it doesn't.</text>
+  </g>
+</svg>

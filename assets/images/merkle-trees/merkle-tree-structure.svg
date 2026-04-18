@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 470" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="13">
+  <defs>
+    <linearGradient id="rootGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="intGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="leafGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="dataGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="116%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Title -->
+  <text x="360" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#1e293b">Merkle Tree with Four Transactions</text>
+
+  <!-- Edges drawn FIRST so nodes paint on top -->
+  <g stroke="#94a3b8" stroke-width="2" fill="none">
+    <!-- Root to H01 -->
+    <line x1="360" y1="90" x2="200" y2="170"/>
+    <!-- Root to H23 -->
+    <line x1="360" y1="90" x2="520" y2="170"/>
+    <!-- H01 to H0 -->
+    <line x1="200" y1="210" x2="120" y2="280"/>
+    <!-- H01 to H1 -->
+    <line x1="200" y1="210" x2="280" y2="280"/>
+    <!-- H23 to H2 -->
+    <line x1="520" y1="210" x2="440" y2="280"/>
+    <!-- H23 to H3 -->
+    <line x1="520" y1="210" x2="600" y2="280"/>
+    <!-- Leaf hashes to data -->
+    <line x1="120" y1="316" x2="120" y2="370" stroke-dasharray="4,3"/>
+    <line x1="280" y1="316" x2="280" y2="370" stroke-dasharray="4,3"/>
+    <line x1="440" y1="316" x2="440" y2="370" stroke-dasharray="4,3"/>
+    <line x1="600" y1="316" x2="600" y2="370" stroke-dasharray="4,3"/>
+  </g>
+
+  <!-- Root node -->
+  <g filter="url(#shadow)">
+    <rect x="290" y="48" width="140" height="44" rx="8" fill="url(#rootGrad)"/>
+    <text x="360" y="66" text-anchor="middle" fill="white" font-weight="600" font-size="13">Root Hash</text>
+    <text x="360" y="82" text-anchor="middle" fill="#c7d2fe" font-size="10">H(0x01 ‖ H01 ‖ H23)</text>
+  </g>
+
+  <!-- Internal nodes -->
+  <g filter="url(#shadow)">
+    <rect x="130" y="170" width="140" height="44" rx="8" fill="url(#intGrad)"/>
+    <text x="200" y="188" text-anchor="middle" fill="white" font-weight="600">H01</text>
+    <text x="200" y="204" text-anchor="middle" fill="#ddd6fe" font-size="10">H(0x01 ‖ H0 ‖ H1)</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="450" y="170" width="140" height="44" rx="8" fill="url(#intGrad)"/>
+    <text x="520" y="188" text-anchor="middle" fill="white" font-weight="600">H23</text>
+    <text x="520" y="204" text-anchor="middle" fill="#ddd6fe" font-size="10">H(0x01 ‖ H2 ‖ H3)</text>
+  </g>
+
+  <!-- Leaf hash nodes -->
+  <g filter="url(#shadow)">
+    <rect x="62" y="280" width="116" height="38" rx="8" fill="url(#leafGrad)"/>
+    <text x="120" y="295" text-anchor="middle" fill="white" font-weight="600">H0</text>
+    <text x="120" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(0x00 ‖ tx0)</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="222" y="280" width="116" height="38" rx="8" fill="url(#leafGrad)"/>
+    <text x="280" y="295" text-anchor="middle" fill="white" font-weight="600">H1</text>
+    <text x="280" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(0x00 ‖ tx1)</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="382" y="280" width="116" height="38" rx="8" fill="url(#leafGrad)"/>
+    <text x="440" y="295" text-anchor="middle" fill="white" font-weight="600">H2</text>
+    <text x="440" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(0x00 ‖ tx2)</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect x="542" y="280" width="116" height="38" rx="8" fill="url(#leafGrad)"/>
+    <text x="600" y="295" text-anchor="middle" fill="white" font-weight="600">H3</text>
+    <text x="600" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(0x00 ‖ tx3)</text>
+  </g>
+
+  <!-- Data blocks -->
+  <g filter="url(#shadow)">
+    <rect x="70" y="375" width="100" height="32" rx="6" fill="url(#dataGrad)"/>
+    <text x="120" y="396" text-anchor="middle" fill="white" font-weight="600">tx0</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="230" y="375" width="100" height="32" rx="6" fill="url(#dataGrad)"/>
+    <text x="280" y="396" text-anchor="middle" fill="white" font-weight="600">tx1</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="390" y="375" width="100" height="32" rx="6" fill="url(#dataGrad)"/>
+    <text x="440" y="396" text-anchor="middle" fill="white" font-weight="600">tx2</text>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="550" y="375" width="100" height="32" rx="6" fill="url(#dataGrad)"/>
+    <text x="600" y="396" text-anchor="middle" fill="white" font-weight="600">tx3</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(40, 430)">
+    <rect x="0" y="0" width="14" height="14" rx="3" fill="url(#rootGrad)"/>
+    <text x="20" y="12" fill="#475569" font-size="11">Root</text>
+    <rect x="80" y="0" width="14" height="14" rx="3" fill="url(#intGrad)"/>
+    <text x="100" y="12" fill="#475569" font-size="11">Internal nodes</text>
+    <rect x="210" y="0" width="14" height="14" rx="3" fill="url(#leafGrad)"/>
+    <text x="230" y="12" fill="#475569" font-size="11">Leaf hashes (0x00 prefix)</text>
+    <rect x="410" y="0" width="14" height="14" rx="3" fill="url(#dataGrad)"/>
+    <text x="430" y="12" fill="#475569" font-size="11">Raw transaction data</text>
+  </g>
+</svg>
