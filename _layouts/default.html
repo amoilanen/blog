@@ -169,6 +169,55 @@
       font-size: 0.85em;
     }
 
+    /* Rouge syntax highlighting (GitHub-style light theme) */
+    .highlight .c, .highlight .cd, .highlight .cm, .highlight .c1, .highlight .cs { color: #998; font-style: italic; } /* comments */
+    .highlight .cp { color: #999; font-weight: bold; } /* preprocessor */
+    .highlight .err { color: #a61717; background-color: #e3d2d2; } /* error */
+    .highlight .k, .highlight .kc, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv { color: #000; font-weight: bold; } /* keyword */
+    .highlight .kt { color: #458; font-weight: bold; } /* keyword type */
+    .highlight .o, .highlight .ow { color: #000; font-weight: bold; } /* operator */
+    .highlight .n, .highlight .na, .highlight .nb, .highlight .bp { color: #333; } /* name */
+    .highlight .nc { color: #458; font-weight: bold; } /* name class */
+    .highlight .no { color: #008080; } /* name constant */
+    .highlight .nd { color: #3c5d5d; font-weight: bold; } /* name decorator */
+    .highlight .ni { color: #800080; } /* name entity */
+    .highlight .ne, .highlight .nf { color: #900; font-weight: bold; } /* name function/exception */
+    .highlight .nl { color: #900; font-weight: bold; } /* name label */
+    .highlight .nn { color: #555; } /* name namespace */
+    .highlight .nt { color: #000080; } /* name tag */
+    .highlight .nv, .highlight .vc, .highlight .vg, .highlight .vi { color: #008080; } /* name variable */
+    .highlight .s, .highlight .sb, .highlight .sc, .highlight .sd, .highlight .s2, .highlight .se, .highlight .sh, .highlight .si, .highlight .sx, .highlight .s1 { color: #d14; } /* string */
+    .highlight .sr { color: #009926; } /* string regex */
+    .highlight .ss { color: #990073; } /* string symbol */
+    .highlight .m, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo, .highlight .mb, .highlight .mx { color: #099; } /* number */
+    .highlight .gd { color: #000; background-color: #fdd; } /* diff deleted */
+    .highlight .gi { color: #000; background-color: #dfd; } /* diff inserted */
+    .highlight .ge { font-style: italic; }
+    .highlight .gs { font-weight: bold; }
+    .highlight .gh, .highlight .gu { color: #999; }
+    .highlight .gr { color: #a00; }
+    .highlight .go { color: #888; }
+    .highlight .gp { color: #555; }
+    .highlight .gt { color: #a00; }
+    .highlight .w { color: #bbb; } /* whitespace */
+
+    .content .highlight,
+    .content div.highlighter-rouge {
+      background: #f8f8f8;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-bottom: 1.25rem;
+      overflow: hidden;
+    }
+
+    .content .highlight pre,
+    .content div.highlighter-rouge pre {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      margin: 0;
+    }
+
     .post-date {
       color: #888;
       font-size: 0.9rem;
