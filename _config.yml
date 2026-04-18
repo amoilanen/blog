@@ -3,6 +3,8 @@ description: A blog about software development, programming languages, and compu
 baseurl: /blog
 url: https://amoilanen.github.io
 
+google_analytics: "G-8QX74DTKJR"
+
 markdown: kramdown
 kramdown:
   input: GFM
