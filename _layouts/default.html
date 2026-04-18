@@ -3,195 +3,351 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% if page.title %}{{ page.title }} - {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
+  <title>{% if page.title %}{{ page.title }} — {{ site.title }}{% else %}{{ site.title }}{% endif %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --bg: #fbfaf7;
+      --text: #1c1c1c;
+      --muted: #6b6b6b;
+      --subtle: #8a8a8a;
+      --border: #e7e2d6;
+      --accent: #8a5a2b;
+      --code-bg: #f3efe6;
+      --serif: "Source Serif 4", "Source Serif Pro", Charter, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
     }
 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { font-size: 18px; }
+
     body {
-      font-family: Georgia, 'Times New Roman', serif;
-      color: #333;
-      background: #fdfdfd;
+      font-family: var(--serif);
+      color: var(--text);
+      background: var(--bg);
       line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
     }
 
     a {
-      color: #2a6496;
+      color: var(--accent);
       text-decoration: none;
+      border-bottom: 1px solid rgba(138, 90, 43, 0.25);
+      transition: border-color 0.15s;
     }
 
     a:hover {
-      text-decoration: underline;
+      border-bottom-color: var(--accent);
     }
 
+    /* Header */
     .site-header {
-      background: #2c3e50;
-      color: #ecf0f1;
-      padding: 1.5rem 2rem;
-    }
-
-    .site-header h1 {
-      font-size: 1.6rem;
-      font-weight: normal;
-    }
-
-    .site-header h1 a {
-      color: #ecf0f1;
-    }
-
-    .site-header p {
-      font-size: 0.9rem;
-      color: #bdc3c7;
-      margin-top: 0.25rem;
-    }
-
-    .container {
       display: flex;
-      max-width: 1100px;
-      margin: 2rem auto;
-      padding: 0 1.5rem;
-      gap: 3rem;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.25rem 1.75rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
-    .sidebar {
-      flex: 0 0 220px;
-      font-size: 0.85rem;
+    .menu-toggle {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem;
+      margin-left: -0.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 38px;
+      height: 38px;
     }
 
-    .sidebar h3 {
-      font-size: 0.95rem;
-      color: #2c3e50;
-      margin-bottom: 0.5rem;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 0.25rem;
+    .menu-toggle span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.25s ease, opacity 0.2s;
     }
 
-    .sidebar .year-group {
+    .menu-toggle[aria-expanded="true"] span:nth-child(1) {
+      transform: translateY(7px) rotate(45deg);
+    }
+    .menu-toggle[aria-expanded="true"] span:nth-child(2) {
+      opacity: 0;
+    }
+    .menu-toggle[aria-expanded="true"] span:nth-child(3) {
+      transform: translateY(-7px) rotate(-45deg);
+    }
+
+    .brand {
+      font-family: var(--serif);
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .brand a {
+      color: var(--text);
+      border-bottom: none;
+    }
+
+    .brand a:hover {
+      color: var(--accent);
+    }
+
+    /* Drawer */
+    .drawer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 340px;
+      max-width: 85vw;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      padding: 2rem 2rem 3rem;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 20;
+      overflow-y: auto;
+    }
+
+    .drawer.open { transform: translateX(0); }
+
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(20, 15, 10, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 15;
+    }
+
+    .drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer h3 {
+      font-family: var(--sans);
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--subtle);
       margin-bottom: 1.25rem;
     }
 
-    .sidebar .year-label {
-      font-weight: bold;
-      color: #555;
-      margin-bottom: 0.25rem;
+    .drawer .year-label {
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin: 1.5rem 0 0.5rem;
     }
 
-    .sidebar ul {
-      list-style: none;
-      padding-left: 0;
+    .drawer .year-label:first-of-type { margin-top: 0; }
+
+    .drawer ul { list-style: none; }
+
+    .drawer li { margin-bottom: 0.6rem; line-height: 1.35; }
+
+    .drawer li a {
+      color: var(--text);
+      font-size: 0.95rem;
+      border-bottom: none;
     }
 
-    .sidebar li {
-      margin-bottom: 0.3rem;
-      line-height: 1.4;
+    .drawer li a:hover { color: var(--accent); }
+
+    /* Main content */
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 4.5rem 1.75rem 6rem;
     }
 
-    .sidebar li a {
-      color: #2a6496;
-    }
-
-    .content {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .content h1 {
-      font-size: 1.8rem;
-      margin-bottom: 1rem;
-      color: #2c3e50;
-    }
-
-    .content h2 {
-      font-size: 1.4rem;
-      margin-top: 2rem;
-      margin-bottom: 0.75rem;
-      color: #2c3e50;
-    }
-
-    .content h3 {
-      font-size: 1.15rem;
-      margin-top: 1.5rem;
+    h1.post-title {
+      font-family: var(--serif);
+      font-size: 2.5rem;
+      line-height: 1.15;
+      font-weight: 600;
+      letter-spacing: -0.02em;
       margin-bottom: 0.5rem;
-      color: #2c3e50;
     }
+
+    .post-meta {
+      font-family: var(--sans);
+      font-size: 0.82rem;
+      color: var(--subtle);
+      letter-spacing: 0.02em;
+      margin-bottom: 3rem;
+    }
+
+    .content h1, .content h2, .content h3, .content h4 {
+      font-family: var(--serif);
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      line-height: 1.25;
+      margin-top: 2.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .content h1 { font-size: 1.85rem; }
+    .content h2 { font-size: 1.4rem; }
+    .content h3 { font-size: 1.15rem; }
+    .content h4 { font-size: 1rem; }
 
     .content p {
-      margin-bottom: 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 1.0625rem;
     }
 
     .content ul, .content ol {
-      margin-bottom: 1rem;
-      padding-left: 1.5rem;
+      margin: 0 0 1.25rem 1.5rem;
     }
 
-    .content li {
-      margin-bottom: 0.3rem;
-    }
+    .content li { margin-bottom: 0.35rem; }
 
     .content img {
       max-width: 100%;
       height: auto;
+      border-radius: 3px;
+      display: block;
+      margin: 1.5rem auto;
     }
 
     .content blockquote {
-      border-left: 3px solid #2c3e50;
-      padding: 0.5rem 1rem;
-      margin: 1rem 0;
-      color: #555;
-      background: #f9f9f9;
+      border-left: 3px solid var(--accent);
+      padding: 0.25rem 1.25rem;
+      margin: 1.5rem 0;
+      color: var(--muted);
+      font-style: italic;
     }
 
-    /* Code styling */
+    .content hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 2.5rem auto;
+      width: 60%;
+    }
+
+    .content strong { font-weight: 600; }
+
+    /* Inline code */
     .content code {
-      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-      font-size: 0.9em;
-      background: #f4f4f4;
-      padding: 0.15em 0.35em;
+      font-family: "JetBrains Mono", "SF Mono", Consolas, Monaco, monospace;
+      font-size: 0.88em;
+      background: var(--code-bg);
+      padding: 0.12em 0.38em;
       border-radius: 3px;
+      color: #6a4b1e;
     }
 
+    /* Code blocks */
     .content pre {
-      background: #f4f4f4;
-      border: 1px solid #ddd;
+      background: #fafaf7;
+      border: 1px solid var(--border);
       border-radius: 4px;
-      padding: 1rem;
+      padding: 1rem 1.1rem;
       overflow-x: auto;
-      margin-bottom: 1.25rem;
-      line-height: 1.5;
+      margin-bottom: 1.5rem;
+      line-height: 1.55;
+      font-size: 0.86rem;
     }
 
     .content pre code {
       background: none;
       padding: 0;
-      font-size: 0.85em;
+      color: inherit;
+      font-size: inherit;
     }
 
-    /* Rouge syntax highlighting (GitHub-style light theme) */
-    .highlight .c, .highlight .cd, .highlight .cm, .highlight .c1, .highlight .cs { color: #998; font-style: italic; } /* comments */
-    .highlight .cp { color: #999; font-weight: bold; } /* preprocessor */
-    .highlight .err { color: #a61717; background-color: #e3d2d2; } /* error */
-    .highlight .k, .highlight .kc, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv { color: #000; font-weight: bold; } /* keyword */
-    .highlight .kt { color: #458; font-weight: bold; } /* keyword type */
-    .highlight .o, .highlight .ow { color: #000; font-weight: bold; } /* operator */
-    .highlight .n, .highlight .na, .highlight .nb, .highlight .bp { color: #333; } /* name */
-    .highlight .nc { color: #458; font-weight: bold; } /* name class */
-    .highlight .no { color: #008080; } /* name constant */
-    .highlight .nd { color: #3c5d5d; font-weight: bold; } /* name decorator */
-    .highlight .ni { color: #800080; } /* name entity */
-    .highlight .ne, .highlight .nf { color: #900; font-weight: bold; } /* name function/exception */
-    .highlight .nl { color: #900; font-weight: bold; } /* name label */
-    .highlight .nn { color: #555; } /* name namespace */
-    .highlight .nt { color: #000080; } /* name tag */
-    .highlight .nv, .highlight .vc, .highlight .vg, .highlight .vi { color: #008080; } /* name variable */
-    .highlight .s, .highlight .sb, .highlight .sc, .highlight .sd, .highlight .s2, .highlight .se, .highlight .sh, .highlight .si, .highlight .sx, .highlight .s1 { color: #d14; } /* string */
-    .highlight .sr { color: #009926; } /* string regex */
-    .highlight .ss { color: #990073; } /* string symbol */
-    .highlight .m, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo, .highlight .mb, .highlight .mx { color: #099; } /* number */
-    .highlight .gd { color: #000; background-color: #fdd; } /* diff deleted */
-    .highlight .gi { color: #000; background-color: #dfd; } /* diff inserted */
+    .content div.highlighter-rouge,
+    .content figure.highlight,
+    .content > .highlight {
+      background: #fafaf7;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .content div.highlighter-rouge .highlight,
+    .content div.highlighter-rouge pre,
+    .content figure.highlight pre,
+    .content > .highlight pre {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      margin: 0;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 0.4rem;
+      right: 0.4rem;
+      font-family: var(--sans);
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.6rem;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--muted);
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s, background 0.15s;
+    }
+
+    .content div.highlighter-rouge:hover .copy-btn,
+    .content figure.highlight:hover .copy-btn,
+    .content > .highlight:hover .copy-btn,
+    .copy-btn:focus {
+      opacity: 1;
+    }
+
+    .copy-btn:hover { color: var(--text); background: #fff; }
+    .copy-btn.copied { color: #2a7d2e; border-color: #b5d8b5; }
+
+    /* Rouge tokens (GitHub-style light theme) */
+    .highlight .c, .highlight .cd, .highlight .cm, .highlight .c1, .highlight .cs { color: #998; font-style: italic; }
+    .highlight .cp { color: #999; font-weight: bold; }
+    .highlight .err { color: #a61717; background-color: #e3d2d2; }
+    .highlight .k, .highlight .kc, .highlight .kd, .highlight .kn, .highlight .kp, .highlight .kr, .highlight .kv { color: #000; font-weight: bold; }
+    .highlight .kt { color: #458; font-weight: bold; }
+    .highlight .o, .highlight .ow { color: #000; font-weight: bold; }
+    .highlight .n, .highlight .na, .highlight .nb, .highlight .bp { color: #333; }
+    .highlight .nc { color: #458; font-weight: bold; }
+    .highlight .no { color: #008080; }
+    .highlight .nd { color: #3c5d5d; font-weight: bold; }
+    .highlight .ni { color: #800080; }
+    .highlight .ne, .highlight .nf { color: #900; font-weight: bold; }
+    .highlight .nl { color: #900; font-weight: bold; }
+    .highlight .nn { color: #555; }
+    .highlight .nt { color: #000080; }
+    .highlight .nv, .highlight .vc, .highlight .vg, .highlight .vi { color: #008080; }
+    .highlight .s, .highlight .sb, .highlight .sc, .highlight .sd, .highlight .s2, .highlight .se, .highlight .sh, .highlight .si, .highlight .sx, .highlight .s1 { color: #d14; }
+    .highlight .sr { color: #009926; }
+    .highlight .ss { color: #990073; }
+    .highlight .m, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo, .highlight .mb, .highlight .mx { color: #099; }
+    .highlight .gd { color: #000; background-color: #fdd; }
+    .highlight .gi { color: #000; background-color: #dfd; }
     .highlight .ge { font-style: italic; }
     .highlight .gs { font-weight: bold; }
     .highlight .gh, .highlight .gu { color: #999; }
@@ -199,96 +355,213 @@
     .highlight .go { color: #888; }
     .highlight .gp { color: #555; }
     .highlight .gt { color: #a00; }
-    .highlight .w { color: #bbb; } /* whitespace */
+    .highlight .w { color: #bbb; }
 
-    .content .highlight,
-    .content div.highlighter-rouge {
-      background: #f8f8f8;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      margin-bottom: 1.25rem;
-      overflow: hidden;
+    /* Home page intro + post list */
+    .intro {
+      font-family: var(--serif);
+      font-size: 1.2rem;
+      line-height: 1.55;
+      color: #2a2a2a;
+      margin: 0 0 3rem;
+      max-width: 620px;
     }
 
-    .content .highlight pre,
-    .content div.highlighter-rouge pre {
-      background: transparent;
-      border: none;
-      border-radius: 0;
-      margin: 0;
+    .post-list-year {
+      font-family: var(--sans);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      color: var(--subtle);
+      text-transform: uppercase;
+      margin: 3rem 0 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
     }
 
-    .post-date {
-      color: #888;
-      font-size: 0.9rem;
-      margin-bottom: 1.5rem;
+    .post-list article {
+      margin-bottom: 2.25rem;
     }
 
+    .post-list h2 {
+      font-family: var(--serif);
+      font-size: 1.4rem;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      line-height: 1.3;
+      margin-bottom: 0.3rem;
+    }
+
+    .post-list h2 a {
+      color: var(--text);
+      border-bottom: none;
+    }
+
+    .post-list h2 a:hover { color: var(--accent); }
+
+    .post-list .meta {
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      color: var(--subtle);
+      letter-spacing: 0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .post-list .excerpt {
+      font-size: 1rem;
+      color: #3a3a3a;
+      line-height: 1.6;
+    }
+
+    /* Footer */
     .site-footer {
+      font-family: var(--sans);
       text-align: center;
-      padding: 2rem;
-      color: #888;
-      font-size: 0.8rem;
-      border-top: 1px solid #eee;
-      margin-top: 3rem;
+      padding: 2.5rem 1rem;
+      color: var(--subtle);
+      font-size: 0.78rem;
+      border-top: 1px solid var(--border);
+      margin-top: 4rem;
     }
 
     /* Responsive */
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
-        gap: 1.5rem;
-      }
-
-      .sidebar {
-        flex: none;
-        width: 100%;
-        border-bottom: 1px solid #ddd;
-        padding-bottom: 1.5rem;
-      }
-
-      .content h1 {
-        font-size: 1.5rem;
-      }
+    @media (max-width: 640px) {
+      html { font-size: 17px; }
+      main { padding: 2.5rem 1.25rem 4rem; }
+      h1.post-title { font-size: 1.9rem; }
+      .site-header { padding: 1rem 1.25rem; }
+      .content .highlight pre,
+      .content pre { font-size: 0.8rem; }
     }
   </style>
 </head>
 <body>
   <header class="site-header">
-    <h1><a href="{{ site.baseurl }}/">{{ site.title }}</a></h1>
-    <p>{{ site.description }}</p>
+    <button class="menu-toggle" aria-label="Open posts menu" aria-expanded="false" aria-controls="drawer">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="brand"><a href="{{ site.baseurl }}/">{{ site.title }}</a></div>
   </header>
 
-  <div class="container">
-    <nav class="sidebar">
-      <h3>Posts</h3>
-      {% assign posts_by_year = site.posts | group_by_exp: "post", "post.date | date: '%Y'" %}
-      {% for year in posts_by_year %}
-      <div class="year-group">
-        <div class="year-label">{{ year.name }}</div>
-        <ul>
-          {% for post in year.items %}
-          <li><a href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a></li>
-          {% endfor %}
-        </ul>
-      </div>
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+  <aside class="drawer" id="drawer" aria-hidden="true" aria-label="All posts">
+    <h3>All posts</h3>
+    {% assign posts_by_year = site.posts | group_by_exp: "post", "post.date | date: '%Y'" %}
+    {% for year in posts_by_year %}
+    <div class="year-label">{{ year.name }}</div>
+    <ul>
+      {% for post in year.items %}
+      <li><a href="{{ post.url | prepend: site.baseurl }}">{{ post.title }}</a></li>
       {% endfor %}
-    </nav>
+    </ul>
+    {% endfor %}
+  </aside>
 
-    <main class="content">
-      {% if page.title %}
-      <h1>{{ page.title }}</h1>
-      {% if page.date %}
-      <div class="post-date">{{ page.date | date: "%B %d, %Y" }}</div>
-      {% endif %}
-      {% endif %}
+  <main>
+    {% if page.title %}
+    <h1 class="post-title">{{ page.title }}</h1>
+    {% if page.date %}
+    <div class="post-meta">{{ page.date | date: "%B %-d, %Y" }}</div>
+    {% endif %}
+    {% endif %}
 
-      {{ content }}
-    </main>
-  </div>
+    <div class="content">{{ content }}</div>
+  </main>
 
   <footer class="site-footer">
     &copy; {{ site.time | date: '%Y' }} {{ site.title }}
   </footer>
+
+  <script>
+    (function() {
+      var toggle = document.querySelector('.menu-toggle');
+      var drawer = document.getElementById('drawer');
+      var backdrop = document.getElementById('drawer-backdrop');
+      function setOpen(open) {
+        toggle.setAttribute('aria-expanded', open);
+        drawer.classList.toggle('open', open);
+        backdrop.classList.toggle('open', open);
+        drawer.setAttribute('aria-hidden', !open);
+      }
+      toggle.addEventListener('click', function() {
+        setOpen(drawer.getAttribute('aria-hidden') === 'true');
+      });
+      backdrop.addEventListener('click', function() { setOpen(false); });
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') setOpen(false);
+      });
+    })();
+
+    // Auto-link bare URLs in prose (kramdown GFM doesn't handle them)
+    (function() {
+      var urlRegex = /\bhttps?:\/\/[^\s<>"']+?(?=[.,;:!?)]*(?:\s|$))/g;
+      var SKIP = { A: 1, CODE: 1, PRE: 1, SCRIPT: 1, STYLE: 1 };
+      function walk(node) {
+        if (node.nodeType === 3) {
+          var text = node.nodeValue;
+          if (text.indexOf('http') === -1) return;
+          urlRegex.lastIndex = 0;
+          var m, last = 0, frag = null;
+          while ((m = urlRegex.exec(text)) !== null) {
+            if (!frag) frag = document.createDocumentFragment();
+            if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+            var a = document.createElement('a');
+            a.href = m[0];
+            a.textContent = m[0];
+            a.rel = 'noopener';
+            frag.appendChild(a);
+            last = m.index + m[0].length;
+          }
+          if (frag) {
+            if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+            node.parentNode.replaceChild(frag, node);
+          }
+        } else if (node.nodeType === 1 && !SKIP[node.tagName]) {
+          var children = Array.prototype.slice.call(node.childNodes);
+          for (var i = 0; i < children.length; i++) walk(children[i]);
+        }
+      }
+      var content = document.querySelector('.content');
+      if (content) walk(content);
+    })();
+
+    // Copy buttons on code blocks
+    (function() {
+      var blocks = document.querySelectorAll('.content div.highlighter-rouge, .content figure.highlight, .content > .highlight');
+      blocks.forEach(function(block) {
+        var pre = block.querySelector('pre');
+        if (!pre) return;
+        var btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.type = 'button';
+        btn.textContent = 'Copy';
+        btn.setAttribute('aria-label', 'Copy code');
+        btn.addEventListener('click', function() {
+          var text = pre.innerText;
+          var done = function() {
+            btn.textContent = 'Copied';
+            btn.classList.add('copied');
+            setTimeout(function() {
+              btn.textContent = 'Copy';
+              btn.classList.remove('copied');
+            }, 1500);
+          };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(function() {});
+          } else {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); done(); } catch (e) {}
+            document.body.removeChild(ta);
+          }
+        });
+        block.appendChild(btn);
+      });
+    })();
+  </script>
 </body>
 </html>
