@@ -32,7 +32,7 @@ A Merkle tree is a binary tree where every leaf node contains the hash of a data
 
 Here is a Merkle tree built from four transactions:
 
-![Merkle tree with four transactions](/assets/images/merkle-trees/merkle-tree-structure.svg)
+![Merkle tree with four transactions]({{ site.baseurl }}/assets/images/merkle-trees/merkle-tree-structure.svg)
 
 Each leaf hash (`H0` through `H3`) is computed from the raw transaction data using a cryptographic hash function (SHA-256 in our implementation). The internal nodes `H01` and `H23` are computed by hashing the concatenation of their children. The root is computed from those two intermediate hashes.
 
@@ -100,7 +100,7 @@ There is a security concern that is easy to overlook. Consider what happens if l
 
 The solution, standardized in [RFC 6962](https://www.rfc-editor.org/rfc/rfc6962) (Certificate Transparency), is **domain separation**: prefix leaf hashes with a `0x00` byte and internal node hashes with a `0x01` byte. This ensures that a leaf hash and an internal node hash can never collide, even if the underlying data happens to be identical.
 
-![Domain separation: leaf vs internal node hashing](/assets/images/merkle-trees/domain-separation.svg)
+![Domain separation: leaf vs internal node hashing]({{ site.baseurl }}/assets/images/merkle-trees/domain-separation.svg)
 
 In Rust this looks quite straightforward. Here are the two hashing functions that the tree uses internally:
 
@@ -216,7 +216,7 @@ pub fn build<T: AsRef<[u8]>>(leaves: &[T]) -> MerkleTree {
 
 Let's trace through this for four leaves `["tx0", "tx1", "tx2", "tx3"]` to understand exactly what happens at each stage:
 
-![Bottom-up construction of a Merkle tree](/assets/images/merkle-trees/build-algorithm.svg)
+![Bottom-up construction of a Merkle tree]({{ site.baseurl }}/assets/images/merkle-trees/build-algorithm.svg)
 
 **Step 1.** Each leaf is hashed with domain separation: `hash_leaf(b"tx0")` produces `H0`, `hash_leaf(b"tx1")` produces `H1`, and so on. This gives us the initial `current_level = [H0, H1, H2, H3]`.
 
@@ -262,7 +262,7 @@ Note the bounds check in `get_leaf_hash`: it uses `self.leaf_count` rather than 
 
 What happens when the number of leaves is not a power of two? The standard approach, used in Bitcoin, is to duplicate the last leaf so that every level has an even number of nodes. For example, a tree with three transactions `[tx0, tx1, tx2]` is built as if it had four: `[tx0, tx1, tx2, tx2]`.
 
-![Handling odd number of leaves by duplicating the last one](/assets/images/merkle-trees/odd-leaves.svg)
+![Handling odd number of leaves by duplicating the last one]({{ site.baseurl }}/assets/images/merkle-trees/odd-leaves.svg)
 
 This duplication happens at every level, not just the leaf level. Consider a tree with five leaves: `[tx0, tx1, tx2, tx3, tx4]`. At the leaf level, `tx4` is duplicated to make six. Those six hashes produce three pairs at the next level, and then the last one is duplicated again to make four. This continues until we reach the root.
 
@@ -351,7 +351,7 @@ Why record the direction? Because `hash_pair(A, B)` produces a different result 
 
 Let's trace through a concrete example. Suppose we want to prove that `tx2` is included in our four-transaction tree. The proof consists of the sibling hashes along the path from `tx2` to the root:
 
-![Inclusion proof for tx2 showing the verification path](/assets/images/merkle-trees/inclusion-proof.svg)
+![Inclusion proof for tx2 showing the verification path]({{ site.baseurl }}/assets/images/merkle-trees/inclusion-proof.svg)
 
 The proof for `tx2` contains two hashes: `H3` (the sibling at the leaf level, on the right) and `H01` (the sibling at the next level up, on the left). The verification process is:
 
@@ -566,7 +566,7 @@ The direction test is particularly interesting. It confirms that `hash_pair` is 
 
 Now that we understand how Merkle trees work at a fundamental level — the data structures, the construction, proof generation, and verification — we can see why they are so valuable in blockchain systems. The logarithmic proof size is exactly what makes **Simplified Payment Verification (SPV)** possible. SPV was described in Section 7 of the Bitcoin whitepaper and is the reason lightweight wallets can function without storing the entire blockchain.
 
-![SPV architecture: full node vs light node](/assets/images/merkle-trees/spv-architecture.svg)
+![SPV architecture: full node vs light node]({{ site.baseurl }}/assets/images/merkle-trees/spv-architecture.svg)
 
 A **full node** stores every block with all its transactions and the corresponding Merkle tree. A **light node** stores only block headers, which include the Merkle root of each block's transaction tree. When the light node wants to verify a transaction, it asks a full node for a Merkle proof, then verifies it locally against the stored root.
 
