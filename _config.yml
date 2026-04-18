@@ -5,6 +5,14 @@ url: https://amoilanen.github.io
 
 google_analytics: "G-8QX74DTKJR"
 
+giscus:
+  repo: "amoilanen/blog"
+  repo_id: "MDEwOlJlcG9zaXRvcnkzMzE0MzgxMw=="
+  category: "Comments"
+  category_id: "DIC_kwDOAfm8Bc4C7KNR"
+  mapping: "pathname"
+  theme: "light"
+
 markdown: kramdown
 kramdown:
   input: GFM

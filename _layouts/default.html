@@ -422,6 +422,12 @@
       line-height: 1.6;
     }
 
+    .comments {
+      margin-top: 4rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+    }
+
     /* Footer */
     .site-footer {
       font-family: var(--sans);
@@ -475,6 +481,27 @@
     {% endif %}
 
     <div class="content">{{ content }}</div>
+
+    {% if page.date and site.giscus.repo_id != "REPLACE_WITH_REPO_ID" %}
+    <section class="comments">
+      <script src="https://giscus.app/client.js"
+              data-repo="{{ site.giscus.repo }}"
+              data-repo-id="{{ site.giscus.repo_id }}"
+              data-category="{{ site.giscus.category }}"
+              data-category-id="{{ site.giscus.category_id }}"
+              data-mapping="{{ site.giscus.mapping }}"
+              data-strict="0"
+              data-reactions-enabled="1"
+              data-emit-metadata="0"
+              data-input-position="top"
+              data-theme="{{ site.giscus.theme }}"
+              data-lang="en"
+              data-loading="lazy"
+              crossorigin="anonymous"
+              async>
+      </script>
+    </section>
+    {% endif %}
   </main>
 
   <footer class="site-footer">
