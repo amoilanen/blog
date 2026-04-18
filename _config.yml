@@ -17,3 +17,5 @@ exclude:
   - Gemfile.lock
   - smthngsmwhr.wordpress.com
   - posts
+  - vendor
+  - .bundle
