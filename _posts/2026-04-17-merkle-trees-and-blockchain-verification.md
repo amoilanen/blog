@@ -6,26 +6,10 @@ date: 2026-04-17
 
 # Merkle Trees and Blockchain Verification
 
-Imagine you are running a Bitcoin wallet on your phone. The full Bitcoin blockchain is [over 500 GB and growing](https://www.blockchain.com/explorer/charts/blocks-size). You certainly cannot store it all on a mobile device. Yet somehow your wallet can confirm that a payment you received is legitimate, included in a real block, without downloading that block's worth of transactions. How?
-
-The answer lies in a data structure invented by Ralph Merkle in 1979 and described in his 1987 paper [*"A Digital Signature Based on a Conventional Encryption Function"*](https://link.springer.com/chapter/10.1007/3-540-48184-2_32). To appreciate what Merkle trees do, it helps to first understand the simpler structure they improve upon: the **hash list**.
-
-A hash list is straightforward. You take each data block in your dataset, hash it individually, and then compute a single **root hash** by hashing the concatenation of all the individual hashes: `Root = H(H0 ‖ H1 ‖ H2 ‖ … ‖ Hn-1)`. The root acts as a fingerprint for the entire dataset — change any block, and the root changes. So far, so good.
-
-![Hash list: flat structure where all hashes feed into the root]({{ site.baseurl }}/assets/images/merkle-trees/hash-list.svg)
-
-The problem shows up when you try to **verify a single item**. Suppose a verifier knows the trusted root and wants to confirm that a particular block (say `tx2`) is in the dataset. The verifier cannot just hash `tx2` and compare it with the root — the root is a hash of *all* the individual hashes concatenated together. To recompute the root and check it, the verifier needs every other hash too: `H0, H1, H3, H4, …` — the complete set. There is no shortcut. Omit a single hash, and the concatenation is wrong, and the recomputed root will not match. This means that proving membership of one item in a dataset of *n* items requires transmitting all *n* hashes. The proof size grows linearly with the dataset.
-
-A Merkle tree solves this by organizing those same hashes into a **binary tree** rather than a flat list. Instead of hashing all items together in one shot, it hashes them in pairs: `H0` with `H1`, `H2` with `H3`, and so on. Those pair-hashes are then paired again at the next level, and so on, until a single root hash remains. This hierarchical structure is what makes it possible to verify membership using only *⌈log₂(n)⌉* hashes — a number that grows logarithmically with the size of the dataset — instead of all *n*.
-
-To see why this matters, consider a typical Bitcoin block. As of 2025, an average block contains roughly 3,000–4,000 transactions. With a hash list, a light node verifying a single transaction would need to download all ~3,500 hashes (about 112 KB of SHA-256 digests) and re-hash the entire list. With a Merkle tree, the same verification requires only *⌈log₂(3500)⌉ = 12* hashes — just 384 bytes. That is a **~300× reduction**. For the largest blocks, which can hold over 10,000 transactions, the proof is still only 14 hashes (448 bytes), while the hash list approach would require over 320 KB. This logarithmic scaling is precisely what makes Simplified Payment Verification (SPV) practical: a mobile wallet can confirm a transaction's inclusion in a block by downloading a handful of hashes rather than the entire block, which is why lightweight Bitcoin clients can operate on devices with limited bandwidth and storage.
-
-This property is so useful that Merkle trees have become one of the foundational primitives in distributed systems, from blockchains to file distribution networks to database replication protocols.
-
-In this post we will look at how Merkle trees work, why they are secure, and how they enable lightweight blockchain clients. Along the way we will examine a [Rust implementation](https://github.com/amoilanen/merkle-tree) in detail: the core data structures, the tree construction algorithm, proof generation, and proof verification. Only after we have a solid understanding of the data structure itself will we dive into the blockchain application.
-
 ## Contents
 
+- [Introducing Merkle trees](#introducing-merkle-trees)
+- [Blockchains and transaction verification](#blockchains-and-transaction-verification)
 - [What is a Merkle tree?](#what-is-a-merkle-tree)
 - [The Hash type and helper functions](#the-hash-type-and-helper-functions)
 - [Domain separation: a subtle but important detail](#domain-separation-a-subtle-but-important-detail)
@@ -37,6 +21,38 @@ In this post we will look at how Merkle trees work, why they are secure, and how
 - [Blockchain verification with SPV](#blockchain-verification-with-spv)
 - [Beyond blockchains](#beyond-blockchains)
 - [Summary](#summary)
+
+## Introducing Merkle trees
+
+A common problem in distributed systems is **proving that a single item belongs to a dataset** without transmitting the entire dataset. This comes up everywhere: a blockchain node checking that a transaction was included in a block, a peer-to-peer client verifying that a downloaded file chunk matches the content the sharer originally claimed to offer, a database replica confirming it has the same data as the primary node.
+
+The data structure that makes such proving efficient is the **Merkle tree**, invented by Ralph Merkle in 1979 and described in his 1987 paper [*"A Digital Signature Based on a Conventional Encryption Function"*](https://link.springer.com/chapter/10.1007/3-540-48184-2_32).
+
+To appreciate what Merkle trees enable and what their utility is, it helps to first look at and understand a simpler structure they improve upon: the **hash list**.
+
+Hash list is straightforward. You take each item in your dataset, hash it individually, and then compute a single **root hash** by hashing the concatenation of all the individual hashes for individual items: `Root = H(H0 ‖ H1 ‖ H2 ‖ … ‖ Hn-1)`. The root acts as a fingerprint for the entire dataset, if you change any item, the root will change. So far, so good.
+
+An important limitation however immediately becomes apparent when you try to verify that a *single* item is in the dataset. A verifier who knows the trusted root cannot just hash one item and compare because the root depends on *all* of the item hashes concatenated together. To recompute it, the verifier needs the hash of every other item too. Proving membership of one item out of *n* using a hash list therefore requires transmitting all *n* hashes. The proof size grows linearly with the size of the dataset which quickly becomes prohibitely inefficient for larger datasets.
+
+![Hash list: flat structure where all hashes feed into the root]({{ site.baseurl }}/assets/images/merkle-trees/hash-list.svg)
+
+A Merkle tree solves this by organizing those same hashes into a **binary tree** rather than a flat list. Instead of hashing all items together in one shot, it hashes them in pairs: `H0` with `H1`, `H2` with `H3`, and so on. Those pair-hashes are then paired again at the next level, and so on, until a single root hash remains. This hierarchical structure is what makes it possible to verify membership using only *⌈log₂(n)⌉* hashes — a number that grows logarithmically with the size of the dataset — instead of all *n*. This property is so useful that Merkle trees have become one of the foundational primitives in distributed systems, from blockchains to file distribution networks and database replication protocols.
+
+In this post we will look at how Merkle trees work, why they are secure, and how they enable lightweight blockchain clients. Along the way we will examine a [Rust implementation](https://github.com/amoilanen/merkle-tree) in detail: the core data structures, the tree construction algorithm, proof generation, and proof verification. But first, let's see why Merkle trees are so important in the blockchain (i.e. in Bitcoin), how they enable lightweight clients and practical efficient verification of a transaction membership in a block - the application that will serve as our running example throughout the post.
+
+## Blockchains and transaction verification
+
+To make this concrete, let's connect "items" and "datasets" to the domain where Merkle trees are most widely known: blockchain and Bitcoin.
+
+In Bitcoin, a **transaction** is a record that transfers value from one address to another — it is the individual data item. A **block** is a batch of transactions that a miner has bundled together, validated, and committed to the blockchain — it is the dataset. Blocks are chained together: each block header contains the hash of the previous block header, forming an append-only ledger. Crucially, each block header also contains a single hash that commits to *all* the transactions in that block. This is the **Merkle root**, and it is how Bitcoin makes it possible to verify that a specific transaction was included in a block without downloading the entire block.
+
+Why does this matter? In Bitcoin's consensus protocol, full nodes validate every transaction in every block. But not every participant can afford to be a full node — the full blockchain is [over 500 GB and growing](https://www.blockchain.com/explorer/charts/blocks-size). A lightweight client — say, a wallet running on your phone — only downloads block headers (80 bytes each) and trusts that the longest chain of valid headers represents the true ledger. When this wallet needs to confirm that a payment it received actually made it into the blockchain, it must verify that the corresponding transaction is included in some block. This is called **Simplified Payment Verification (SPV)**, described in [section 8 of Satoshi Nakamoto's original Bitcoin whitepaper](https://bitcoin.org/bitcoin.pdf). The wallet asks a full node for a proof of inclusion, and the full node responds with a small set of hashes that the wallet can use, together with the trusted Merkle root from the block header, to confirm the transaction's presence.
+
+Now let's see how the hash list fails here and how the Merkle tree succeeds. Suppose a wallet knows the trusted Merkle root and wants to confirm that a particular transaction (say `tx2`) is in a block. With a hash list, the wallet cannot just hash `tx2` and compare — the root depends on all the hashes concatenated together. The wallet would need the hash of every other transaction in the block too: `H0, H1, H3, H4, …` — the complete set. Proving a transaction belongs to a block of *n* transactions requires transmitting all *n* hashes.
+
+With a Merkle tree, the same verification requires only *⌈log₂(n)⌉* hashes. Consider a typical Bitcoin block: as of 2025, an average block contains roughly 3,000–4,000 transactions. With a hash list, a light node verifying a single transaction would need to download all ~3,500 hashes (about 112 KB of SHA-256 digests) and re-hash the entire list. With a Merkle tree, the same verification requires only *⌈log₂(3500)⌉ = 12* hashes — just 384 bytes. That is a **~300× reduction**. For the largest blocks, which can hold over 10,000 transactions, the proof is still only 14 hashes (448 bytes), while the hash list approach would require over 320 KB. This logarithmic scaling is precisely what makes SPV practical: a mobile wallet can confirm a transaction's inclusion in a block by downloading a handful of hashes rather than the entire block, which is why lightweight Bitcoin clients can operate on devices with limited bandwidth and storage.
+
+From here on, we will use "transaction" and "block" as our running examples for "item" and "dataset", but keep in mind that Merkle trees are a general-purpose data structure — everything we discuss applies equally to any scenario where you need to prove that a piece of data belongs to a committed set.
 
 ## What is a Merkle tree?
 
