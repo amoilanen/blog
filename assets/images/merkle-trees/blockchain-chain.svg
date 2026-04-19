@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1060 416" font-family="'Segoe UI', system-ui, -apple-system, sans-serif" font-size="13">
+  <defs>
+    <linearGradient id="blockGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="hashGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <filter id="shadow" x="-4%" y="-4%" width="108%" height="116%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <!-- Title -->
+  <text x="530" y="24" text-anchor="middle" font-size="16" font-weight="600" fill="#1e293b">Blocks Chained by Cryptographic Hashes</text>
+
+  <!-- ==================== Block 0 (Genesis) ==================== -->
+  <g filter="url(#shadow)" transform="translate(20, 40)">
+    <rect x="0" y="0" width="300" height="328" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+    <!-- Title bar -->
+    <rect x="0" y="0" width="300" height="36" rx="10" fill="url(#blockGrad)"/>
+    <rect x="0" y="18" width="300" height="18" fill="url(#blockGrad)"/>
+    <text x="150" y="24" text-anchor="middle" fill="white" font-weight="700" font-size="14">Block 0 (Genesis)</text>
+
+    <!-- Prev hash -->
+    <text x="12" y="58" fill="#64748b" font-size="11" font-weight="600">Prev block hash</text>
+    <text x="12" y="72" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">00000000000000000000000000000000</text>
+    <text x="12" y="83" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">00000000000000000000000000000000</text>
+
+    <!-- Merkle root -->
+    <text x="12" y="100" fill="#64748b" font-size="11" font-weight="600">Merkle root</text>
+    <text x="12" y="114" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">4a5e1e4baab89f3a32518a88c31bc87f</text>
+    <text x="12" y="125" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">618f76673e2cc77ab2127b7afdeda33b</text>
+
+    <!-- Nonce -->
+    <text x="12" y="142" fill="#64748b" font-size="11" font-weight="600">Nonce</text>
+    <text x="12" y="156" fill="#334155" font-size="11" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">2083236893</text>
+
+    <!-- Separator -->
+    <line x1="16" y1="168" x2="284" y2="168" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+
+    <!-- Resulting hash -->
+    <rect x="10" y="178" width="280" height="54" rx="6" fill="url(#hashGrad)"/>
+    <text x="150" y="195" text-anchor="middle" fill="white" font-weight="600" font-size="11">Block hash</text>
+    <text x="150" y="209" text-anchor="middle" fill="#d1fae5" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">000000000019d6689c085ae165831e93</text>
+    <text x="150" y="220" text-anchor="middle" fill="#d1fae5" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">4ff763ae46a2a6c172b3f1b60a8ce26f</text>
+
+    <!-- Transactions label -->
+    <rect x="10" y="244" width="280" height="50" rx="6" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="150" y="261" text-anchor="middle" fill="#64748b" font-size="11">1 transaction (coinbase only)</text>
+    <text x="150" y="280" text-anchor="middle" fill="#94a3b8" font-size="9.5" font-style="italic">The first block ever mined (Jan 3, 2009)</text>
+  </g>
+
+  <!-- Arrow from Block 1 to Block 0 -->
+  <g>
+    <line x1="325" y1="210" x2="395" y2="210" stroke="#94a3b8" stroke-width="2.5"/>
+    <polygon points="327,205 317,210 327,215" fill="#94a3b8"/>
+    <text x="360" y="200" text-anchor="middle" fill="#94a3b8" font-size="9" font-style="italic">prev hash</text>
+  </g>
+
+  <!-- ==================== Block 1 ==================== -->
+  <g filter="url(#shadow)" transform="translate(390, 40)">
+    <rect x="0" y="0" width="300" height="310" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+    <rect x="0" y="0" width="300" height="36" rx="10" fill="url(#blockGrad)"/>
+    <rect x="0" y="18" width="300" height="18" fill="url(#blockGrad)"/>
+    <text x="150" y="24" text-anchor="middle" fill="white" font-weight="700" font-size="14">Block 1</text>
+
+    <!-- Prev hash -->
+    <text x="12" y="58" fill="#64748b" font-size="11" font-weight="600">Prev block hash</text>
+    <text x="12" y="72" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">000000000019d6689c085ae165831e93</text>
+    <text x="12" y="83" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">4ff763ae46a2a6c172b3f1b60a8ce26f</text>
+
+    <!-- Merkle root -->
+    <text x="12" y="100" fill="#64748b" font-size="11" font-weight="600">Merkle root</text>
+    <text x="12" y="114" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">0e3e2357e806b6cdb1f70b54c3a3a17b</text>
+    <text x="12" y="125" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">6714ee1f0e68bebb44a74b1efd512098</text>
+
+    <!-- Nonce -->
+    <text x="12" y="142" fill="#64748b" font-size="11" font-weight="600">Nonce</text>
+    <text x="12" y="156" fill="#334155" font-size="11" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">1639830024</text>
+
+    <line x1="16" y1="168" x2="284" y2="168" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+
+    <rect x="10" y="178" width="280" height="54" rx="6" fill="url(#hashGrad)"/>
+    <text x="150" y="195" text-anchor="middle" fill="white" font-weight="600" font-size="11">Block hash</text>
+    <text x="150" y="209" text-anchor="middle" fill="#d1fae5" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">00000000839a8e6886ab5951d76f4114</text>
+    <text x="150" y="220" text-anchor="middle" fill="#d1fae5" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">75428afc90947ee320161bbf18eb6048</text>
+
+    <rect x="10" y="244" width="280" height="32" rx="6" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="150" y="265" text-anchor="middle" fill="#64748b" font-size="11">1,734 transactions</text>
+  </g>
+
+  <!-- Arrow from Block 2 to Block 1 -->
+  <g>
+    <line x1="695" y1="210" x2="765" y2="210" stroke="#94a3b8" stroke-width="2.5"/>
+    <polygon points="697,205 687,210 697,215" fill="#94a3b8"/>
+    <text x="730" y="200" text-anchor="middle" fill="#94a3b8" font-size="9" font-style="italic">prev hash</text>
+  </g>
+
+  <!-- ==================== Block 2 ==================== -->
+  <g filter="url(#shadow)" transform="translate(760, 40)">
+    <rect x="0" y="0" width="300" height="310" rx="10" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
+    <rect x="0" y="0" width="300" height="36" rx="10" fill="url(#blockGrad)"/>
+    <rect x="0" y="18" width="300" height="18" fill="url(#blockGrad)"/>
+    <text x="150" y="24" text-anchor="middle" fill="white" font-weight="700" font-size="14">Block 2</text>
+
+    <!-- Prev hash -->
+    <text x="12" y="58" fill="#64748b" font-size="11" font-weight="600">Prev block hash</text>
+    <text x="12" y="72" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">00000000839a8e6886ab5951d76f4114</text>
+    <text x="12" y="83" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">75428afc90947ee320161bbf18eb6048</text>
+
+    <!-- Merkle root -->
+    <text x="12" y="100" fill="#64748b" font-size="11" font-weight="600">Merkle root</text>
+    <text x="12" y="114" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">9b0fc92260312ce44e74ef369f5c66bb</text>
+    <text x="12" y="125" fill="#334155" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">b85848f2eddd5a7a1cde251e54ccfdd5</text>
+
+    <!-- Nonce -->
+    <text x="12" y="142" fill="#64748b" font-size="11" font-weight="600">Nonce</text>
+    <text x="12" y="156" fill="#334155" font-size="11" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">2504433986</text>
+
+    <line x1="16" y1="168" x2="284" y2="168" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="4,3"/>
+
+    <rect x="10" y="178" width="280" height="54" rx="6" fill="url(#hashGrad)"/>
+    <text x="150" y="195" text-anchor="middle" fill="white" font-weight="600" font-size="11">Block hash</text>
+    <text x="150" y="209" text-anchor="middle" fill="#d1fae5" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">000000006a625f06636b8bb6ac7b960a</text>
+    <text x="150" y="220" text-anchor="middle" fill="#d1fae5" font-size="8.5" font-family="'SF Mono', 'Fira Code', 'Consolas', monospace">8d03705d1ace08b1a19da3fdcc99ddbd</text>
+
+    <rect x="10" y="244" width="280" height="32" rx="6" fill="#f1f5f9" stroke="#e2e8f0" stroke-width="1"/>
+    <text x="150" y="265" text-anchor="middle" fill="#64748b" font-size="11">3,215 transactions</text>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(265, 394)">
+    <text x="0" y="0" fill="#64748b" font-size="10" font-style="italic">Each block's "Prev block hash" is exactly the block hash of the preceding block, forming a tamper-evident chain.</text>
+  </g>
+</svg>

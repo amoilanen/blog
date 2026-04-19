@@ -47,7 +47,7 @@ Before we look at how Merkle trees fit into blockchain systems, it is worth taki
 
 ### Transactions: the atomic unit
 
-A **transaction** is the smallest meaningful event on a blockchain. In Bitcoin, a transaction is essentially a signed statement that says *"address A sends 0.5 BTC to address B."* It references previous transactions to prove the sender has the funds (inputs), specifies recipient addresses and amounts (outputs), and includes a cryptographic signature proving the sender authorized the transfer. Transactions are broadcast to the network and sit in a pool of unconfirmed transactions, waiting to be picked up by a miner and included in a block.
+A **transaction** is the smallest meaningful event on a blockchain. In Bitcoin, a transaction is essentially a signed statement that says *"address A sends 0.5 BTC to address B."* It references previous transactions to prove the sender has the funds (inputs), specifies recipient addresses and amounts (outputs), and includes a cryptographic signature proving the sender authorized the transfer. Transactions are broadcast to the network and sit in a pool of unconfirmed transactions, waiting to be picked up by a miner and to be included into a new block.
 
 ### Blocks: pages in the ledger
 
@@ -82,24 +82,17 @@ Nonce = 2             → Hash = 3c88a1e7b0…  ✗
 Nonce = 2,871,403,291 → Hash = 000000000019d6…  ✓ (enough leading zeros!)
 ```
 
+Why does such a nonce exist at all? The intuition comes from the uniform distribution of hash outputs. A good cryptographic hash function maps inputs to outputs that are effectively uniformly distributed across the entire output space. For SHA-256, there are 2²⁵⁶ possible outputs. The difficulty target defines a threshold: any hash below the target is valid. If the target requires, say, *k* leading zero bits, then the fraction of valid hashes is 2²⁵⁶⁻ᵏ / 2²⁵⁶ = 1/2ᵏ. Each nonce value produces what is essentially a random sample from the output space — independent of all previous attempts — so the probability of hitting a valid hash on any single try is 1/2ᵏ. This means the expected number of attempts before finding a valid nonce is 2ᵏ: large, but finite. It is a geometric distribution: there is no guarantee that any *specific* nonce works, but the probability of finding *none* after a large number of trials shrinks exponentially. In practice, miners also vary other header fields (the timestamp, the transaction set, an extra nonce in the coinbase transaction) to explore a space far larger than the 2³² values of the 4-byte nonce alone, making it overwhelmingly likely that a valid solution exists and will be found.
+
+This mining process is the core of the **consensus protocol** known as **Nakamoto consensus**. In a decentralized network with no central authority, nodes need a way to agree on which transactions are valid and in what order they occurred. Proof of Work provides that agreement mechanism: the chain with the most cumulative work (the longest valid chain) is accepted as the canonical history. Miners compete to extend this chain by solving the puzzle described above. The difficulty target adjusts periodically (every 2,016 blocks in Bitcoin, roughly two weeks) so that blocks are produced at an approximately constant rate — one every 10 minutes on average — regardless of how much total computing power the network has. When two miners find valid blocks at roughly the same time, a temporary fork occurs; the network resolves it by following whichever branch gets extended first with subsequent blocks. This simple rule — *always follow the longest valid chain* — is enough to achieve eventual consensus across thousands of nodes without any coordination.
+
 When a valid nonce is found, the miner broadcasts the block to the network. Other nodes can **verify it instantly**: they hash the header once and check whether the result meets the difficulty target. Finding the nonce is enormously expensive; verifying it is trivial. This asymmetry is the essence of Proof of Work.
 
 ### How blocks chain together
 
 Here is the critical design insight that makes the whole structure secure: each block header contains the **hash of the previous block's header**. This means every block is cryptographically linked to the one before it, forming a chain that stretches all the way back to the very first block (the *genesis block*):
 
-```
-┌──────────────────────┐     ┌──────────────────────┐     ┌──────────────────────┐
-│  Block 0 (Genesis)   │     │  Block 1             │     │  Block 2             │
-│                      │     │                      │     │                      │
-│  Prev: 0000…0000     │◄────│  Prev: 000000000019… │◄────│  Prev: 00000000839a… │
-│  Merkle root: a1b2…  │     │  Merkle root: c3d4…  │     │  Merkle root: e5f6…  │
-│  Nonce: 2083236893   │     │  Nonce: 1639830024   │     │  Nonce: 2504433986   │
-│  ─────────────────   │     │  ─────────────────   │     │  ─────────────────   │
-│  → Hash: 00000000…   │     │  → Hash: 00000000…   │     │  → Hash: 00000000…   │
-│         0019d6…      │     │         839a8e…      │     │         6a625f…      │
-└──────────────────────┘     └──────────────────────┘     └──────────────────────┘
-```
+![Blocks chained together by cryptographic hashes]({{ site.baseurl }}/assets/images/merkle-trees/blockchain-chain.svg)
 
 Each block's hash depends on the *entire* header, which includes the previous block's hash, the Merkle root (which depends on every transaction), and the nonce. This creates a chain of cryptographic dependencies: altering anything in any block changes that block's hash, which breaks the link from the next block, which breaks the link from the block after that, and so on all the way to the tip of the chain.
 
@@ -107,7 +100,7 @@ Each block's hash depends on the *entire* header, which includes the previous bl
 
 Suppose an attacker wants to alter a transaction buried in Block 5 of a chain that currently has 100 blocks. Here is what would have to happen:
 
-1. Changing the transaction changes Block 5's **Merkle root** (the root *commits to* the exact transaction set — change one transaction and the root changes).
+1. Changing the transaction changes Block 5's **Merkle root** (the root *commits to* the exact transaction set — change one transaction and the root changes) - we will see in detail why this is the case further in the post
 2. A different Merkle root changes Block 5's header, which changes Block 5's **hash**.
 3. Block 6 records Block 5's hash in its "previous block hash" field. That field no longer matches, so Block 6 is now **invalid**. The attacker must re-mine Block 6 — find a new nonce whose hash meets the difficulty target.
 4. But re-mining Block 6 gives it a new hash, which invalidates Block 7. The attacker must re-mine Block 7 too.
@@ -117,21 +110,21 @@ And here is the decisive point: while the attacker is re-doing all that work, th
 
 The deeper a block is buried under subsequent blocks, the more cumulative work an attacker would need to redo to alter it. This is why a transaction with six confirmations (six blocks mined on top of the block containing it) is considered practically irreversible in Bitcoin.
 
-This is the security foundation on which the entire blockchain rests. And the Merkle root — the hash that commits each block to its transactions — is the bridge that connects this chain-level security to individual transaction verification. Let's see how.
+This is the security foundation on which the entire blockchain rests. And the Merkle root, the hash that commits each block to its transactions, is the bridge that connects this chain-level security to individual transaction verification. Let's see how.
 
 ## Blockchains and transaction verification
 
 With this foundation in place, let's connect the concepts of "items" and "datasets" from the Merkle tree discussion to the blockchain domain.
 
-In Bitcoin, a transaction is the individual data item, and a block is the dataset. As we saw above, each block header contains a single hash — the **Merkle root** — that commits to *all* the transactions in that block. This is how Bitcoin makes it possible to verify that a specific transaction was included in a block without downloading the entire block.
+In Bitcoin, a transaction is the individual data item, and a block is the dataset. As we saw above, each block header contains a single hash — the **Merkle root** — that commits to *all* the transactions in that block. Using this Merkle root is how Bitcoin makes it possible to verify that a specific transaction was included in a block without downloading the entire block.
 
-Why does this matter? In Bitcoin's consensus protocol, full nodes validate every transaction in every block. But not every participant can afford to be a full node — the full blockchain is [over 500 GB and growing](https://www.blockchain.com/explorer/charts/blocks-size). A lightweight client — say, a wallet running on your phone — only downloads block headers (80 bytes each) and trusts that the longest chain of valid headers represents the true ledger. When this wallet needs to confirm that a payment it received actually made it into the blockchain, it must verify that the corresponding transaction is included in some block. This is called **Simplified Payment Verification (SPV)**, described in [section 8 of Satoshi Nakamoto's original Bitcoin whitepaper](https://bitcoin.org/bitcoin.pdf). The wallet asks a full node for a proof of inclusion, and the full node responds with a small set of hashes that the wallet can use, together with the trusted Merkle root from the block header, to confirm the transaction's presence.
+Why does this matter and why the Merkle tree and Merkle root are needed? In Bitcoin's consensus protocol, full nodes validate every transaction in every block. But not every participant can afford to be a full node — the full blockchain is [over 500 GB and growing](https://www.blockchain.com/explorer/charts/blocks-size). A lightweight client — say, a wallet running on your phone — only downloads block headers (80 bytes each) and trusts that the longest chain of valid headers represents the true ledger. When this wallet needs to confirm that a payment it received actually made it into the blockchain, it must verify that the corresponding transaction is included in some block. This is called **Simplified Payment Verification (SPV)**, described in [section 8 of Satoshi Nakamoto's original Bitcoin whitepaper](https://bitcoin.org/bitcoin.pdf). The wallet asks a full node for a proof of inclusion, and the full node responds with a small set of hashes that the wallet can use, together with the trusted Merkle root from the block header, to confirm the transaction's presence.
 
 Now let's see how the hash list fails here and how the Merkle tree succeeds. Suppose a wallet knows the trusted Merkle root and wants to confirm that a particular transaction (say `tx2`) is in a block. With a hash list, the wallet cannot just hash `tx2` and compare — the root depends on all the hashes concatenated together. The wallet would need the hash of every other transaction in the block too: `H0, H1, H3, H4, …` — the complete set. Proving a transaction belongs to a block of *n* transactions requires transmitting all *n* hashes.
 
-With a Merkle tree, the same verification requires only *⌈log₂(n)⌉* hashes. Consider a typical Bitcoin block: as of 2025, an average block contains roughly 3,000–4,000 transactions. With a hash list, a light node verifying a single transaction would need to download all ~3,500 hashes (about 112 KB of SHA-256 digests) and re-hash the entire list. With a Merkle tree, the same verification requires only *⌈log₂(3500)⌉ = 12* hashes — just 384 bytes. That is a **~300× reduction**. For the largest blocks, which can hold over 10,000 transactions, the proof is still only 14 hashes (448 bytes), while the hash list approach would require over 320 KB. This logarithmic scaling is precisely what makes SPV practical: a mobile wallet can confirm a transaction's inclusion in a block by downloading a handful of hashes rather than the entire block, which is why lightweight Bitcoin clients can operate on devices with limited bandwidth and storage.
+With a Merkle tree, the same verification requires only *⌈log₂(n)⌉* hashes. Consider a typical Bitcoin block: as of 2025, an average block contains roughly 3,000–4,000 transactions. With a hash list, a light node verifying a single transaction would need to download all ~3,500 hashes (about 112 KB of SHA-256 digests) and re-hash the entire list. With a Merkle tree, the same verification requires only *⌈log₂(3500)⌉ = 12* hashes — just 384 bytes. That is a **~300× reduction**. For the largest blocks, which can hold over 10,000 transactions, the proof is still only 14 hashes (448 bytes), while the hash list approach would require over 320 KB. This logarithmic scaling is precisely what makes SPV practical: a mobile wallet can confirm a transaction's inclusion in a block by downloading a handful of hashes rather than the entire block, which is why lightweight Bitcoin clients can operate on devices with limited bandwidth and storage, and this is very important for the wide practical adoption of Bitcoin.
 
-From here on, we will use "transaction" and "block" as our running examples for "item" and "dataset", but keep in mind that Merkle trees are a general-purpose data structure — everything we discuss applies equally to any scenario where you need to prove that a piece of data belongs to a committed set.
+From here on, we will use "transaction" and "block" as our running examples for "item" and "dataset", but keep in mind that Merkle trees are a general-purpose data structure — everything we discuss applies equally to any scenario where you need to prove that a piece of data belongs to a committed set. While extensively used in the blockchain world, Merkle trees have wider applications.
 
 ## What is a Merkle tree?
 
