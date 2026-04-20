@@ -128,15 +128,15 @@ From here on, we will use "transaction" and "block" as our running examples for 
 
 ## What is a Merkle tree?
 
-A Merkle tree is a binary tree where every leaf node contains the hash of a data block, and every internal node contains the hash of its two children concatenated together. The single hash at the top, the **root hash**, acts as a fingerprint for the entire dataset. Change a single byte in any leaf, and the root hash changes.
+A Merkle tree is a binary tree where every leaf node contains the hash of a data block, and every internal node contains the hash of its two children concatenated together. The single hash at the top, the **root hash**, acts as a fingerprint for the entire dataset. Change a single byte in any leaf, and the root hash changes — this is the core property of a Merkle tree. Because every internal node is the hash of its children, a modification at any leaf cascades upward through every ancestor, ultimately producing a completely different root. This cascade is what makes the root hash a reliable **commitment** to the entire dataset — the term "commits to" is standard in cryptography and means *binds irrevocably to*: once a root hash is published, the data it was computed from is fixed, and it is impossible to alter, insert, or remove any piece of that data without producing a different root, immediately revealing the tampering.
 
-Here is a Merkle tree built from four transactions:
+Here is a Merkle tree built from four items (in the blockchain context we discussed earlier, items are transactions and the dataset is a block, but the structure is entirely generic):
 
-![Merkle tree with four transactions]({{ site.baseurl }}/assets/images/merkle-trees/merkle-tree-structure.svg)
+![Merkle tree with four items]({{ site.baseurl }}/assets/images/merkle-trees/merkle-tree-structure.svg)
 
-Each leaf hash (`H0` through `H3`) is computed from the raw transaction data using a cryptographic hash function (SHA-256 in our implementation). The internal nodes `H01` and `H23` are computed by hashing the concatenation of their children. The root is computed from those two intermediate hashes.
+Each leaf hash (`H0` through `H3`) is computed from the raw item data using a cryptographic hash function (SHA-256 in our implementation). The internal nodes `H01` and `H23` are computed by hashing the concatenation of their children. The root is computed from those two intermediate hashes.
 
-This construction has a key property: given the root hash and a small number of intermediate hashes, anyone can verify that a specific leaf belongs to the tree. We will see exactly how that works shortly. But first, let's look at the Rust implementation to understand how these ideas translate into concrete code.
+This data structure has a key property: given the root hash and a small number of intermediate hashes, anyone can verify that a specific leaf belongs to the tree. We will see exactly how that works shortly. But first, let's look at the Rust implementation to understand how these ideas translate into concrete code.
 
 ## The Hash type and helper functions
 
@@ -181,7 +181,7 @@ impl fmt::Debug for Hash {
 
 These trait implementations may seem like minor polish, but they make the library much more pleasant to work with. When you print a proof or debug a tree, you see meaningful hex strings instead of arrays of raw bytes.
 
-For plain hashing of arbitrary data (outside the tree) there is a simple `hash` function:
+For plain hashing of arbitrary data there is a simple `hash` function:
 
 ```rust
 /// Hash arbitrary data with SHA-256.
@@ -194,9 +194,13 @@ pub fn hash(data: &[u8]) -> Hash {
 
 This is a straightforward wrapper around the `sha2` crate. We will use it in our examples when we need to produce hashes that are *not* tree leaves (for example, when simulating tampered data).
 
+A note on the choice of hash function: a Merkle tree can in principle be built with any cryptographic hash function, but **SHA-256** is by far the most common choice. [Bitcoin](https://bitcoin.org/bitcoin.pdf) uses it, Certificate Transparency ([RFC 6962](https://www.rfc-editor.org/rfc/rfc6962)) mandates it, and [IPFS](https://github.com/ipfs/specs/blob/main/UNIXFS.md) supports it as the default. Its popularity in Merkle tree implementations comes down to a combination of properties: a 256-bit output that is large enough to make collisions computationally infeasible (finding two inputs that hash to the same output would require on the order of 2¹²⁸ operations — not 2²⁵⁶, because of the [birthday paradox](https://en.wikipedia.org/wiki/Birthday_attack): when you are looking for *any* pair that collides rather than a match against a specific target, the probability grows much faster, analogous to how in a room of just 23 people there is a >50% chance that *some* two share a birthday out of 365 possible), strong resistance to preimage attacks (given a hash, finding *any* input that produces it requires the full 2²⁵⁶ operations), and the avalanche effect (flipping a single input bit changes roughly half the output bits, which is what makes the change-detection cascade through tree levels possible). SHA-256 is also fast enough for practical use while being well-studied and battle-tested over two decades, with no known practical weaknesses. Our implementation uses SHA-256 throughout, but the tree construction and proof logic are hash-agnostic — swapping in a different function (say, BLAKE3 or SHA-3) would only require changing the leaf and pair hashing functions.
+
 ## Domain separation: a subtle but important detail
 
-There is a security concern that is easy to overlook. Consider what happens if leaf data and internal node data are hashed the same way. An attacker could potentially craft leaf data that, when hashed, produces the same bytes as a legitimate internal node hash. This is known as a **second-preimage attack** on the tree structure.
+There is a security concern that is easy to overlook. Consider what happens if leaf data and internal node data are hashed the same way. An attacker could potentially craft leaf data that, when hashed, produces the same bytes as a legitimate internal node hash. This is known as a [**second-preimage attack**](https://en.wikipedia.org/wiki/Merkle_tree#Second_preimage_attack) on the tree structure.
+
+Why is this dangerous? Suppose an attacker constructs a leaf whose raw bytes happen to equal the concatenation of two other hashes — say, `H0 ‖ H1`. If leaves and internal nodes are hashed identically, this fake leaf would produce the same hash as the internal node `H01`. The attacker could then present a shorter, fabricated tree — one with fewer real items — that has the same root hash as the original. A verifier comparing roots would see a match and accept the forged tree as authentic, even though it contains completely different data. In a blockchain context, this would mean an attacker could trick a light client into accepting a block with a different set of transactions than the one miners actually committed to.
 
 The solution, standardized in [RFC 6962](https://www.rfc-editor.org/rfc/rfc6962) (Certificate Transparency), is **domain separation**: prefix leaf hashes with a `0x00` byte and internal node hashes with a `0x01` byte. This ensures that a leaf hash and an internal node hash can never collide, even if the underlying data happens to be identical.
 
@@ -326,7 +330,7 @@ Let's trace through this for four leaves `["tx0", "tx1", "tx2", "tx3"]` to under
 
 **Step 4.** `current_level.len() == 1`, so the `while` loop exits. We push the root onto `levels` and reverse the whole vector so that `levels[0]` contains the root and `levels[last]` contains the leaves.
 
-The resulting `levels` array looks like:
+The resulting `levels` vector looks like:
 
 ```
 levels[0] = [Root]                 // 1 hash
@@ -336,7 +340,7 @@ levels[2] = [H0, H1, H2, H3]     // 4 hashes
 
 A few implementation details worth noting. The generic type parameter `T: AsRef<[u8]>` means `build` accepts any type that can be viewed as a byte slice: `&str`, `String`, `Vec<u8>`, `&[u8]`, etc. This makes the API flexible without sacrificing performance. The `chunks_exact(2)` method from the standard library gives us an iterator over pairs, which maps cleanly onto the pairing operation.
 
-The time complexity is **O(n)**: we hash each leaf once, and each subsequent level has half as many nodes, giving us n + n/2 + n/4 + … ≈ 2n hash operations total.
+The time complexity is **O(n)** where *n* is the number of leaves: we hash each leaf once, and each subsequent level has half as many nodes, giving us n + n/2 + n/4 + … ≈ 2n hash operations total.
 
 Accessor methods provide read access to the tree's contents:
 
@@ -395,7 +399,7 @@ fn five_leaves_duplicate_at_each_odd_level() {
 
 The first test confirms that a 3-leaf tree produces a leaf level of length 4, with the last two entries being identical (the duplicated leaf). The second test shows the cascading duplication for 5 leaves: the leaf level has 6 entries (5 + 1 duplicate), which produces 3 pairs, which are padded to 4, producing 2, producing 1 (the root). Four levels total.
 
-Proofs still work correctly for leaves in odd-sized trees, including the duplicated leaf itself:
+Getting a bit ahead, let us note that proofs still work correctly for leaves in odd-sized trees, including the duplicated leaf itself:
 
 ```rust
 #[test]
@@ -411,11 +415,13 @@ fn odd_leaf_duplication_does_not_break_proof() -> anyhow::Result<()> {
 }
 ```
 
+More on the proofs right in the next section.
+
 This keeps the construction simple at the cost of a minor space overhead: at most one extra hash per level, which is negligible compared to the level's size.
 
 ## Inclusion proofs
 
-The most powerful feature of a Merkle tree is the **inclusion proof** (also called a Merkle proof or authentication path). Given a leaf, we can prove it belongs to the tree by providing only the sibling hashes along the path from that leaf to the root. The verifier recomputes the root by hashing upward and checks whether it matches the expected root hash.
+The most powerful feature of a Merkle tree is the **inclusion proof** (also called a Merkle proof or authentication path). Given a leaf, we can prove it belongs to the tree by providing only the sibling hashes along the path from that leaf to the root. The verifier recomputes the root by hashing upward and checks whether the computed value matches the expected root hash.
 
 Before looking at the proof generation algorithm, let's define the data structures. A proof consists of a leaf hash and a sequence of steps, where each step records a sibling hash and its position:
 

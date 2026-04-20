@@ -22,7 +22,7 @@
   </defs>
 
   <!-- Title -->
-  <text x="360" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#1e293b">Merkle Tree with Four Transactions</text>
+  <text x="360" y="28" text-anchor="middle" font-size="16" font-weight="600" fill="#1e293b">Merkle Tree with Four Items</text>
 
   <!-- Edges drawn FIRST so nodes paint on top -->
   <g stroke="#94a3b8" stroke-width="2" fill="none">
@@ -49,63 +49,63 @@
   <g filter="url(#shadow)">
     <rect x="290" y="48" width="140" height="44" rx="8" fill="url(#rootGrad)"/>
     <text x="360" y="66" text-anchor="middle" fill="white" font-weight="600" font-size="13">Root Hash</text>
-    <text x="360" y="82" text-anchor="middle" fill="#c7d2fe" font-size="10">H(0x01 ‖ H01 ‖ H23)</text>
+    <text x="360" y="82" text-anchor="middle" fill="#c7d2fe" font-size="10">H(H01 ‖ H23)</text>
   </g>
 
   <!-- Internal nodes -->
   <g filter="url(#shadow)">
     <rect x="130" y="170" width="140" height="44" rx="8" fill="url(#intGrad)"/>
     <text x="200" y="188" text-anchor="middle" fill="white" font-weight="600">H01</text>
-    <text x="200" y="204" text-anchor="middle" fill="#ddd6fe" font-size="10">H(0x01 ‖ H0 ‖ H1)</text>
+    <text x="200" y="204" text-anchor="middle" fill="#ddd6fe" font-size="10">H(H0 ‖ H1)</text>
   </g>
 
   <g filter="url(#shadow)">
     <rect x="450" y="170" width="140" height="44" rx="8" fill="url(#intGrad)"/>
     <text x="520" y="188" text-anchor="middle" fill="white" font-weight="600">H23</text>
-    <text x="520" y="204" text-anchor="middle" fill="#ddd6fe" font-size="10">H(0x01 ‖ H2 ‖ H3)</text>
+    <text x="520" y="204" text-anchor="middle" fill="#ddd6fe" font-size="10">H(H2 ‖ H3)</text>
   </g>
 
   <!-- Leaf hash nodes -->
   <g filter="url(#shadow)">
     <rect x="62" y="280" width="116" height="38" rx="8" fill="url(#leafGrad)"/>
     <text x="120" y="295" text-anchor="middle" fill="white" font-weight="600">H0</text>
-    <text x="120" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(0x00 ‖ tx0)</text>
+    <text x="120" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(item0)</text>
   </g>
 
   <g filter="url(#shadow)">
     <rect x="222" y="280" width="116" height="38" rx="8" fill="url(#leafGrad)"/>
     <text x="280" y="295" text-anchor="middle" fill="white" font-weight="600">H1</text>
-    <text x="280" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(0x00 ‖ tx1)</text>
+    <text x="280" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(item1)</text>
   </g>
 
   <g filter="url(#shadow)">
     <rect x="382" y="280" width="116" height="38" rx="8" fill="url(#leafGrad)"/>
     <text x="440" y="295" text-anchor="middle" fill="white" font-weight="600">H2</text>
-    <text x="440" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(0x00 ‖ tx2)</text>
+    <text x="440" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(item2)</text>
   </g>
 
   <g filter="url(#shadow)">
     <rect x="542" y="280" width="116" height="38" rx="8" fill="url(#leafGrad)"/>
     <text x="600" y="295" text-anchor="middle" fill="white" font-weight="600">H3</text>
-    <text x="600" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(0x00 ‖ tx3)</text>
+    <text x="600" y="310" text-anchor="middle" fill="#d1fae5" font-size="10">H(item3)</text>
   </g>
 
   <!-- Data blocks -->
   <g filter="url(#shadow)">
     <rect x="70" y="375" width="100" height="32" rx="6" fill="url(#dataGrad)"/>
-    <text x="120" y="396" text-anchor="middle" fill="white" font-weight="600">tx0</text>
+    <text x="120" y="396" text-anchor="middle" fill="white" font-weight="600">item0</text>
   </g>
   <g filter="url(#shadow)">
     <rect x="230" y="375" width="100" height="32" rx="6" fill="url(#dataGrad)"/>
-    <text x="280" y="396" text-anchor="middle" fill="white" font-weight="600">tx1</text>
+    <text x="280" y="396" text-anchor="middle" fill="white" font-weight="600">item1</text>
   </g>
   <g filter="url(#shadow)">
     <rect x="390" y="375" width="100" height="32" rx="6" fill="url(#dataGrad)"/>
-    <text x="440" y="396" text-anchor="middle" fill="white" font-weight="600">tx2</text>
+    <text x="440" y="396" text-anchor="middle" fill="white" font-weight="600">item2</text>
   </g>
   <g filter="url(#shadow)">
     <rect x="550" y="375" width="100" height="32" rx="6" fill="url(#dataGrad)"/>
-    <text x="600" y="396" text-anchor="middle" fill="white" font-weight="600">tx3</text>
+    <text x="600" y="396" text-anchor="middle" fill="white" font-weight="600">item3</text>
   </g>
 
   <!-- Legend -->
@@ -115,8 +115,8 @@
     <rect x="80" y="0" width="14" height="14" rx="3" fill="url(#intGrad)"/>
     <text x="100" y="12" fill="#475569" font-size="11">Internal nodes</text>
     <rect x="210" y="0" width="14" height="14" rx="3" fill="url(#leafGrad)"/>
-    <text x="230" y="12" fill="#475569" font-size="11">Leaf hashes (0x00 prefix)</text>
+    <text x="230" y="12" fill="#475569" font-size="11">Leaf hashes</text>
     <rect x="410" y="0" width="14" height="14" rx="3" fill="url(#dataGrad)"/>
-    <text x="430" y="12" fill="#475569" font-size="11">Raw transaction data</text>
+    <text x="430" y="12" fill="#475569" font-size="11">Raw item data</text>
   </g>
 </svg>
