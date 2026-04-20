@@ -527,7 +527,7 @@ pub fn generate_proof(&self, leaf_hash: &Hash) -> Option<Proof> {
             hash: sibling_hash,
             direction,
         });
-        position /= 2;
+        position = position / 2;
     }
 
     Some(Proof {
@@ -557,7 +557,7 @@ The loop does not enter for `depth = 0` because the range `(1..self.levels.len()
 
 The result is a proof with two steps: `[{H3, Right}, {H01, Left}]`. This matches exactly what we drew in the diagram above.
 
-The position halving (`position /= 2`) is the key insight: it reflects the tree's structure. At the leaf level, nodes 0 and 1 share parent 0, nodes 2 and 3 share parent 1. At the next level, nodes 0 and 1 share parent 0. Dividing the position by 2 maps a node to its parent's position in the level above.
+The position halving (`position = position / 2`) is the key insight: it reflects the tree's structure. At the leaf level, nodes 0 and 1 share parent 0, nodes 2 and 3 share parent 1. At the next level, nodes 0 and 1 share parent 0. Dividing the position by 2 maps a node to its parent's position in the level above.
 
 Note that the method returns `None` if the leaf hash is not found in the tree. This is the correct behavior: you cannot generate a proof for data that is not in the tree.
 
@@ -652,6 +652,17 @@ fn tampered_sibling_hash_invalidates_proof() -> anyhow::Result<()> {
 }
 
 #[test]
+fn tampered_leaf_hash_invalidates_proof() -> anyhow::Result<()> {
+    let tree = MerkleTree::build(&["a", "b", "c", "d"]);
+    let root = tree.get_root_hash().context("missing root")?;
+    let leaf = hash_leaf(b"a");
+    let mut proof = tree.generate_proof(&leaf).context("proof not found")?;
+    proof.leaf = hash_leaf(b"TAMPERED");
+    assert!(!proof.verify(root));
+    Ok(())
+}
+
+#[test]
 fn flipped_sibling_direction_invalidates_proof() -> anyhow::Result<()> {
     let tree = MerkleTree::build(&["a", "b", "c", "d"]);
     let root = tree.get_root_hash().context("missing root")?;
@@ -670,35 +681,37 @@ The direction test is particularly interesting. It confirms that `hash_pair` is 
 
 ## Blockchain verification with SPV
 
-Now that we understand how Merkle trees work at a fundamental level — the data structures, the construction, proof generation, and verification — we can see why they are so valuable in blockchain systems. The logarithmic proof size is exactly what makes **Simplified Payment Verification (SPV)** possible. SPV was described in Section 7 of the Bitcoin whitepaper and is the reason lightweight wallets can function without storing the entire blockchain.
+Now that we understand how Merkle trees work at a fundamental level — the data structures, the construction, proof generation, and verification — we can see why they are so valuable in blockchain systems. The logarithmic proof size is exactly what makes **Simplified Payment Verification (SPV)** possible. SPV was described in [Section 7 of the Bitcoin whitepaper](https://bitcoin.org/bitcoin.pdf) and is the reason lightweight wallets can function without storing the entire blockchain.
 
 ![SPV architecture: full node vs light node]({{ site.baseurl }}/assets/images/merkle-trees/spv-architecture.svg)
 
 A **full node** stores every block with all its transactions and the corresponding Merkle tree. A **light node** stores only block headers, which include the Merkle root of each block's transaction tree. When the light node wants to verify a transaction, it asks a full node for a Merkle proof, then verifies it locally against the stored root.
 
-The trust model is important here: the light node does not need to trust the full node. If the full node provides a fraudulent proof, it will not match the Merkle root that the light node already has from the block header chain. The proof is either mathematically correct or it is not.
+The trust model is important here: the light node does not need to trust the full node. If the full node provides a fraudulent proof, it will not match the Merkle root that the light node already has from the block headers. The proof is either mathematically correct or it is not.
 
 Let's look at how this works in practice using a Rust implementation. First, we need a transaction type with deterministic serialisation:
 
 ```rust
-/// A simplified blockchain transaction.
+/// A simplified Bitcoin-like transaction.
 ///
-/// The `nonce` here is a per-sender sequence number (as in Ethereum's
-/// account-based model) that prevents replay attacks and orders transactions
-/// from the same sender.
+/// In Bitcoin's UTXO model, each transaction consumes previous unspent
+/// outputs (inputs) and creates new outputs.  There is no per-sender
+/// nonce: replay protection is inherent because once a UTXO is spent it
+/// ceases to exist.  Here we use a simplified representation with `from`,
+/// `to`, and `value` fields to keep the focus on Merkle tree verification
+/// rather than full UTXO mechanics.
 struct Transaction {
     from: String,
     to: String,
     value: u64,
-    nonce: u64,
 }
 
 impl Transaction {
     /// Deterministic binary serialisation used as Merkle tree leaf data.
     ///
-    /// A real implementation would use RLP, SSZ, or another canonical encoding;
+    /// A real implementation would use a canonical binary encoding;
     /// here we concatenate fields with a delimiter that cannot appear in the
-    /// address/nonce representation to keep things simple.
+    /// address representation to keep things simple.
     fn to_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::new();
         buf.extend_from_slice(self.from.as_bytes());
@@ -706,14 +719,12 @@ impl Transaction {
         buf.extend_from_slice(self.to.as_bytes());
         buf.push(b'|');
         buf.extend_from_slice(self.value.to_le_bytes().as_slice());
-        buf.push(b'|');
-        buf.extend_from_slice(self.nonce.to_le_bytes().as_slice());
         buf
     }
 }
 ```
 
-The serialisation uses a simple delimiter-based format. In a real blockchain implementation you would use a canonical encoding like [RLP](https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp/) (Ethereum) or a length-prefixed binary format to avoid ambiguity. The key requirement is determinism: the same transaction must always produce the same bytes, so the same leaf hash.
+The serialisation uses a simple delimiter-based format. In a real Bitcoin implementation the transaction would be serialised using Bitcoin's own binary format, but the key requirement for Merkle tree construction is determinism: the same transaction must always produce the same bytes which would produce the same leaf hash.
 
 Now we define the participants: blocks, full nodes, and light nodes:
 
@@ -809,18 +820,18 @@ fn main() -> Result<()> {
     let block_a = Block::new(
         "block-1",
         vec![
-            Transaction { from: "0xAlice".into(), to: "0xBob".into(),   value: 50, nonce: 1 },
-            Transaction { from: "0xBob".into(),   to: "0xCarol".into(), value: 30, nonce: 1 },
-            Transaction { from: "0xCarol".into(), to: "0xDave".into(),  value: 10, nonce: 1 },
-            Transaction { from: "0xDave".into(),  to: "0xAlice".into(), value:  5, nonce: 1 },
-            Transaction { from: "0xAlice".into(), to: "0xDave".into(),  value: 20, nonce: 2 },
+            Transaction { from: "0xAlice".into(), to: "0xBob".into(),   value: 50 },
+            Transaction { from: "0xBob".into(),   to: "0xCarol".into(), value: 30 },
+            Transaction { from: "0xCarol".into(), to: "0xDave".into(),  value: 10 },
+            Transaction { from: "0xDave".into(),  to: "0xAlice".into(), value:  5 },
+            Transaction { from: "0xAlice".into(), to: "0xDave".into(),  value: 20 },
         ],
     );
     let block_b = Block::new(
         "block-2",
         vec![
-            Transaction { from: "0xEve".into(),   to: "0xAlice".into(), value: 100, nonce: 1 },
-            Transaction { from: "0xAlice".into(), to: "0xBob".into(),   value:  75, nonce: 3 },
+            Transaction { from: "0xEve".into(),   to: "0xAlice".into(), value: 100 },
+            Transaction { from: "0xAlice".into(), to: "0xBob".into(),   value:  75 },
         ],
     );
 
