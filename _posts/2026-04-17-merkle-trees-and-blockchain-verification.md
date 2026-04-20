@@ -2,7 +2,7 @@
 layout: default
 title: "Merkle Trees and Blockchain Verification"
 date: 2026-04-17
-description: "Merkle trees let you prove a single item belongs to a large dataset without transmitting the whole thing — the foundation of blockchain SPV, file-integrity checks, and database sync. A deep dive with Rust implementations."
+description: "Merkle trees let you prove a single item belongs to a large dataset without transmitting the whole thing: the foundation of blockchain SPV, file-integrity checks, and database sync. A deep dive with Rust implementations."
 image: /assets/images/merkle-trees/og-preview.png
 ---
 
@@ -39,7 +39,7 @@ An important limitation however immediately becomes apparent when you try to ver
 
 ![Hash list: flat structure where all hashes feed into the root]({{ site.baseurl }}/assets/images/merkle-trees/hash-list.svg)
 
-A Merkle tree solves this by organizing those same hashes into a **binary tree** rather than a flat list. Instead of hashing all items together in one shot, it hashes them in pairs: `H0` with `H1`, `H2` with `H3`, and so on. Those pair-hashes are then paired again at the next level, and so on, until a single root hash remains. This hierarchical structure is what makes it possible to verify membership using only *⌈log₂(n)⌉* hashes — a number that grows logarithmically with the size of the dataset — instead of all *n*. This property is so useful that Merkle trees have become one of the foundational primitives in distributed systems, from blockchains to file distribution networks and database replication protocols.
+A Merkle tree solves this by organizing those same hashes into a **binary tree** rather than a flat list. Instead of hashing all items together in one shot, it hashes them in pairs: `H0` with `H1`, `H2` with `H3`, and so on. Those pair-hashes are then paired again at the next level, and so on, until a single root hash remains. This hierarchical structure is what makes it possible to verify membership using only *⌈log₂(n)⌉* hashes, a number that grows logarithmically with the size of the dataset, instead of all *n*. This property is so useful that Merkle trees have become one of the foundational primitives in distributed systems, from blockchains to file distribution networks and database replication protocols.
 
 In this post we will look at how Merkle trees work, why they are secure, and how they enable lightweight blockchain clients. Along the way we will examine a [Rust implementation](https://github.com/amoilanen/merkle-tree) in detail: the core data structures, the tree construction algorithm, proof generation, and proof verification. But first, let's see why Merkle trees are so important in the blockchain (i.e. in Bitcoin), how they enable lightweight clients and practical efficient verification of a transaction membership in a block - the application that will serve as our running example throughout the post.
 
@@ -55,26 +55,26 @@ A **transaction** is the smallest meaningful event on a blockchain. In Bitcoin, 
 
 A **block** is a batch of transactions that have been validated and permanently recorded. Think of it as a page in an append-only ledger: each page holds many entries, and pages are numbered and linked together so that tearing one out or altering it would be immediately obvious.
 
-Every block has two parts. The **block header** is a compact summary — just 80 bytes in Bitcoin — that contains metadata about the block. The **block body** contains the full list of transactions. The header is what matters for the chain's integrity, so let's look at what it contains:
+Every block has two parts. The **block header** is a compact summary (just 80 bytes in Bitcoin) that contains metadata about the block. The **block body** contains the full list of transactions. The header is what matters for the chain's integrity, so let's look at what it contains:
 
 | Field | Size | Purpose |
 |---|---|---|
 | Version | 4 bytes | Protocol version number |
-| Previous block hash | 32 bytes | SHA-256 hash of the previous block's header — the link that forms the chain |
+| Previous block hash | 32 bytes | SHA-256 hash of the previous block's header, the link that forms the chain |
 | Merkle root | 32 bytes | A single hash that commits to every transaction in the block (more on this shortly) |
 | Timestamp | 4 bytes | Approximate time the block was mined |
 | Difficulty target | 4 bytes | How hard the mining puzzle is |
 | Nonce | 4 bytes | A counter the miner increments while searching for a valid hash |
 
-The phrase **"commits to"** in the Merkle root row is a cryptographic term meaning *binds irrevocably to*. The Merkle root is mathematically determined by the exact set of transactions in the block. Change, remove, reorder, or add even a single transaction, and the Merkle root changes completely. By including this hash in the block header, the block makes a tamper-evident promise about its contents — a promise that cannot be broken without detection.
+The phrase **"commits to"** in the Merkle root row is a cryptographic term meaning *binds irrevocably to*. The Merkle root is mathematically determined by the exact set of transactions in the block. Change, remove, reorder, or add even a single transaction, and the Merkle root changes completely. By including this hash in the block header, the block makes a tamper-evident promise about its contents, a promise that cannot be broken without detection.
 
 ### The nonce and Proof of Work
 
 The **nonce** (short for *number used once*) is central to understanding how new blocks are created and why the chain is secure.
 
-To add a block, a miner must solve a computational puzzle called **Proof of Work**. The miner assembles a candidate block — filling in the previous block hash, the Merkle root of the gathered transactions, the timestamp, and the difficulty target — and then repeatedly hashes the block header, trying different nonce values (0, 1, 2, 3, …), until the resulting hash satisfies a specific condition: it must be numerically smaller than the difficulty target, which in practice means the hash must start with a certain number of leading zeros.
+To add a block, a miner must solve a computational puzzle called **Proof of Work**. The miner assembles a candidate block (filling in the previous block hash, the Merkle root of the gathered transactions, the timestamp, and the difficulty target) and then repeatedly hashes the block header, trying different nonce values (0, 1, 2, 3, …), until the resulting hash satisfies a specific condition: it must be numerically smaller than the difficulty target, which in practice means the hash must start with a certain number of leading zeros.
 
-Because cryptographic hash functions are unpredictable — even a one-bit change in the input produces a completely different output — there is no shortcut. The miner cannot work backwards from a desired hash to find the right nonce. It must try value after value, often billions of them, until one happens to produce a hash with enough leading zeros:
+Because cryptographic hash functions are unpredictable (even a one-bit change in the input produces a completely different output), there is no shortcut. The miner cannot work backwards from a desired hash to find the right nonce. It must try value after value, often billions of them, until one happens to produce a hash with enough leading zeros:
 
 ```
 Nonce = 0             → Hash = 8a3f7b2c4e…  ✗ (no leading zeros)
@@ -84,9 +84,9 @@ Nonce = 2             → Hash = 3c88a1e7b0…  ✗
 Nonce = 2,871,403,291 → Hash = 000000000019d6…  ✓ (enough leading zeros!)
 ```
 
-Why does such a nonce exist at all? The intuition comes from the uniform distribution of hash outputs. A good cryptographic hash function maps inputs to outputs that are effectively uniformly distributed across the entire output space. For SHA-256, there are 2²⁵⁶ possible outputs. The difficulty target defines a threshold: any hash below the target is valid. If the target requires, say, *k* leading zero bits, then the fraction of valid hashes is 2²⁵⁶⁻ᵏ / 2²⁵⁶ = 1/2ᵏ. Each nonce value produces what is essentially a random sample from the output space — independent of all previous attempts — so the probability of hitting a valid hash on any single try is 1/2ᵏ. This means the expected number of attempts before finding a valid nonce is 2ᵏ: large, but finite. It is a geometric distribution: there is no guarantee that any *specific* nonce works, but the probability of finding *none* after a large number of trials shrinks exponentially. In practice, miners also vary other header fields (the timestamp, the transaction set, an extra nonce in the coinbase transaction) to explore a space far larger than the 2³² values of the 4-byte nonce alone, making it overwhelmingly likely that a valid solution exists and will be found.
+Why does such a nonce exist at all? The intuition comes from the uniform distribution of hash outputs. A good cryptographic hash function maps inputs to outputs that are effectively uniformly distributed across the entire output space. For SHA-256, there are 2²⁵⁶ possible outputs. The difficulty target defines a threshold: any hash below the target is valid. If the target requires, say, *k* leading zero bits, then the fraction of valid hashes is 2²⁵⁶⁻ᵏ / 2²⁵⁶ = 1/2ᵏ. Each nonce value produces what is essentially a random sample from the output space, independent of all previous attempts, so the probability of hitting a valid hash on any single try is 1/2ᵏ. This means the expected number of attempts before finding a valid nonce is 2ᵏ: large, but finite. It is a geometric distribution: there is no guarantee that any *specific* nonce works, but the probability of finding *none* after a large number of trials shrinks exponentially. In practice, miners also vary other header fields (the timestamp, the transaction set, an extra nonce in the coinbase transaction) to explore a space far larger than the 2³² values of the 4-byte nonce alone, making it overwhelmingly likely that a valid solution exists and will be found.
 
-This mining process is the core of the **consensus protocol** known as **Nakamoto consensus**. In a decentralized network with no central authority, nodes need a way to agree on which transactions are valid and in what order they occurred. Proof of Work provides that agreement mechanism: the chain with the most cumulative work (the longest valid chain) is accepted as the canonical history. Miners compete to extend this chain by solving the puzzle described above. The difficulty target adjusts periodically (every 2,016 blocks in Bitcoin, roughly two weeks) so that blocks are produced at an approximately constant rate — one every 10 minutes on average — regardless of how much total computing power the network has. When two miners find valid blocks at roughly the same time, a temporary fork occurs; the network resolves it by following whichever branch gets extended first with subsequent blocks. This simple rule — *always follow the longest valid chain* — is enough to achieve eventual consensus across thousands of nodes without any coordination.
+This mining process is the core of the **consensus protocol** known as **Nakamoto consensus**. In a decentralized network with no central authority, nodes need a way to agree on which transactions are valid and in what order they occurred. Proof of Work provides that agreement mechanism: the chain with the most cumulative work (the longest valid chain) is accepted as the canonical history. Miners compete to extend this chain by solving the puzzle described above. The difficulty target adjusts periodically (every 2,016 blocks in Bitcoin, roughly two weeks) so that blocks are produced at an approximately constant rate (one every 10 minutes on average) regardless of how much total computing power the network has. When two miners find valid blocks at roughly the same time, a temporary fork occurs; the network resolves it by following whichever branch gets extended first with subsequent blocks. This simple rule, *always follow the longest valid chain*, is enough to achieve eventual consensus across thousands of nodes without any coordination.
 
 When a valid nonce is found, the miner broadcasts the block to the network. Other nodes can **verify it instantly**: they hash the header once and check whether the result meets the difficulty target. Finding the nonce is enormously expensive; verifying it is trivial. This asymmetry is the essence of Proof of Work.
 
@@ -102,13 +102,13 @@ Each block's hash depends on the *entire* header, which includes the previous bl
 
 Suppose an attacker wants to alter a transaction buried in Block 5 of a chain that currently has 100 blocks. Here is what would have to happen:
 
-1. Changing the transaction changes Block 5's **Merkle root** (the root *commits to* the exact transaction set — change one transaction and the root changes) - we will see in detail why this is the case further in the post
+1. Changing the transaction changes Block 5's **Merkle root** (the root *commits to* the exact transaction set: change one transaction and the root changes) - we will see in detail why this is the case further in the post
 2. A different Merkle root changes Block 5's header, which changes Block 5's **hash**.
-3. Block 6 records Block 5's hash in its "previous block hash" field. That field no longer matches, so Block 6 is now **invalid**. The attacker must re-mine Block 6 — find a new nonce whose hash meets the difficulty target.
+3. Block 6 records Block 5's hash in its "previous block hash" field. That field no longer matches, so Block 6 is now **invalid**. The attacker must re-mine Block 6, i.e. find a new nonce whose hash meets the difficulty target.
 4. But re-mining Block 6 gives it a new hash, which invalidates Block 7. The attacker must re-mine Block 7 too.
 5. This cascade continues all the way to Block 100. The attacker must **re-mine 95 blocks**.
 
-And here is the decisive point: while the attacker is re-doing all that work, the honest network is still mining new blocks on top of Block 100. The attacker is in a race against the combined computational power of every other miner in the network. Unless the attacker controls more than 50% of the total hash rate — the famous **51% attack** — the honest chain will always grow faster, and the attacker's forged chain will never catch up.
+And here is the decisive point: while the attacker is re-doing all that work, the honest network is still mining new blocks on top of Block 100. The attacker is in a race against the combined computational power of every other miner in the network. Unless the attacker controls more than 50% of the total hash rate (the famous **51% attack**), the honest chain will always grow faster, and the attacker's forged chain will never catch up.
 
 The deeper a block is buried under subsequent blocks, the more cumulative work an attacker would need to redo to alter it. This is why a transaction with six confirmations (six blocks mined on top of the block containing it) is considered practically irreversible in Bitcoin.
 
@@ -118,19 +118,19 @@ This is the security foundation on which the entire blockchain rests. And the Me
 
 With this foundation in place, let's connect the concepts of "items" and "datasets" from the Merkle tree discussion to the blockchain domain.
 
-In Bitcoin, a transaction is the individual data item, and a block is the dataset. As we saw above, each block header contains a single hash — the **Merkle root** — that commits to *all* the transactions in that block. Using this Merkle root is how Bitcoin makes it possible to verify that a specific transaction was included in a block without downloading the entire block.
+In Bitcoin, a transaction is the individual data item, and a block is the dataset. As we saw above, each block header contains a single hash, the **Merkle root**, that commits to *all* the transactions in that block. Using this Merkle root is how Bitcoin makes it possible to verify that a specific transaction was included in a block without downloading the entire block.
 
-Why does this matter and why the Merkle tree and Merkle root are needed? In Bitcoin's consensus protocol, full nodes validate every transaction in every block. But not every participant can afford to be a full node — the full blockchain is [over 500 GB and growing](https://www.blockchain.com/explorer/charts/blocks-size). A lightweight client — say, a wallet running on your phone — only downloads block headers (80 bytes each) and trusts that the longest chain of valid headers represents the true ledger. When this wallet needs to confirm that a payment it received actually made it into the blockchain, it must verify that the corresponding transaction is included in some block. This is called **Simplified Payment Verification (SPV)**, described in [section 8 of Satoshi Nakamoto's original Bitcoin whitepaper](https://bitcoin.org/bitcoin.pdf). The wallet asks a full node for a proof of inclusion, and the full node responds with a small set of hashes that the wallet can use, together with the trusted Merkle root from the block header, to confirm the transaction's presence.
+Why does this matter and why the Merkle tree and Merkle root are needed? In Bitcoin's consensus protocol, full nodes validate every transaction in every block. But not every participant can afford to be a full node: the full blockchain is [over 500 GB and growing](https://www.blockchain.com/explorer/charts/blocks-size). A lightweight client (say, a wallet running on your phone) only downloads block headers (80 bytes each) and trusts that the longest chain of valid headers represents the true ledger. When this wallet needs to confirm that a payment it received actually made it into the blockchain, it must verify that the corresponding transaction is included in some block. This is called **Simplified Payment Verification (SPV)**, described in [section 8 of Satoshi Nakamoto's original Bitcoin whitepaper](https://bitcoin.org/bitcoin.pdf). The wallet asks a full node for a proof of inclusion, and the full node responds with a small set of hashes that the wallet can use, together with the trusted Merkle root from the block header, to confirm the transaction's presence.
 
-Now let's see how the hash list fails here and how the Merkle tree succeeds. Suppose a wallet knows the trusted Merkle root and wants to confirm that a particular transaction (say `tx2`) is in a block. With a hash list, the wallet cannot just hash `tx2` and compare — the root depends on all the hashes concatenated together. The wallet would need the hash of every other transaction in the block too: `H0, H1, H3, H4, …` — the complete set. Proving a transaction belongs to a block of *n* transactions requires transmitting all *n* hashes.
+Now let's see how the hash list fails here and how the Merkle tree succeeds. Suppose a wallet knows the trusted Merkle root and wants to confirm that a particular transaction (say `tx2`) is in a block. With a hash list, the wallet cannot just hash `tx2` and compare: the root depends on all the hashes concatenated together. The wallet would need the hash of every other transaction in the block too: `H0, H1, H3, H4, …`, the complete set. Proving a transaction belongs to a block of *n* transactions requires transmitting all *n* hashes.
 
-With a Merkle tree, the same verification requires only *⌈log₂(n)⌉* hashes. Consider a typical Bitcoin block: as of 2025, an average block contains roughly 3,000–4,000 transactions. With a hash list, a light node verifying a single transaction would need to download all ~3,500 hashes (about 112 KB of SHA-256 digests) and re-hash the entire list. With a Merkle tree, the same verification requires only *⌈log₂(3500)⌉ = 12* hashes — just 384 bytes. That is a **~300× reduction**. For the largest blocks, which can hold over 10,000 transactions, the proof is still only 14 hashes (448 bytes), while the hash list approach would require over 320 KB. This logarithmic scaling is precisely what makes SPV practical: a mobile wallet can confirm a transaction's inclusion in a block by downloading a handful of hashes rather than the entire block, which is why lightweight Bitcoin clients can operate on devices with limited bandwidth and storage, and this is very important for the wide practical adoption of Bitcoin.
+With a Merkle tree, the same verification requires only *⌈log₂(n)⌉* hashes. Consider a typical Bitcoin block: as of 2025, an average block contains roughly 3,000–4,000 transactions. With a hash list, a light node verifying a single transaction would need to download all ~3,500 hashes (about 112 KB of SHA-256 digests) and re-hash the entire list. With a Merkle tree, the same verification requires only *⌈log₂(3500)⌉ = 12* hashes, just 384 bytes. That is a **~300× reduction**. For the largest blocks, which can hold over 10,000 transactions, the proof is still only 14 hashes (448 bytes), while the hash list approach would require over 320 KB. This logarithmic scaling is precisely what makes SPV practical: a mobile wallet can confirm a transaction's inclusion in a block by downloading a handful of hashes rather than the entire block, which is why lightweight Bitcoin clients can operate on devices with limited bandwidth and storage, and this is very important for the wide practical adoption of Bitcoin.
 
-From here on, we will use "transaction" and "block" as our running examples for "item" and "dataset", but keep in mind that Merkle trees are a general-purpose data structure — everything we discuss applies equally to any scenario where you need to prove that a piece of data belongs to a committed set. While extensively used in the blockchain world, Merkle trees have wider applications.
+From here on, we will use "transaction" and "block" as our running examples for "item" and "dataset", but keep in mind that Merkle trees are a general-purpose data structure: everything we discuss applies equally to any scenario where you need to prove that a piece of data belongs to a committed set. While extensively used in the blockchain world, Merkle trees have wider applications.
 
 ## What is a Merkle tree?
 
-A Merkle tree is a binary tree where every leaf node contains the hash of a data block, and every internal node contains the hash of its two children concatenated together. The single hash at the top, the **root hash**, acts as a fingerprint for the entire dataset. Change a single byte in any leaf, and the root hash changes — this is the core property of a Merkle tree. Because every internal node is the hash of its children, a modification at any leaf cascades upward through every ancestor, ultimately producing a completely different root. This cascade is what makes the root hash a reliable **commitment** to the entire dataset — the term "commits to" is standard in cryptography and means *binds irrevocably to*: once a root hash is published, the data it was computed from is fixed, and it is impossible to alter, insert, or remove any piece of that data without producing a different root, immediately revealing the tampering.
+A Merkle tree is a binary tree where every leaf node contains the hash of a data block, and every internal node contains the hash of its two children concatenated together. The single hash at the top, the **root hash**, acts as a fingerprint for the entire dataset. Change a single byte in any leaf, and the root hash changes. This is the core property of a Merkle tree. Because every internal node is the hash of its children, a modification at any leaf cascades upward through every ancestor, ultimately producing a completely different root. This cascade is what makes the root hash a reliable **commitment** to the entire dataset. The term "commits to" is standard in cryptography and means *binds irrevocably to*: once a root hash is published, the data it was computed from is fixed, and it is impossible to alter, insert, or remove any piece of that data without producing a different root, immediately revealing the tampering.
 
 Here is a Merkle tree built from four items (in the blockchain context we discussed earlier, items are transactions and the dataset is a block, but the structure is entirely generic):
 
@@ -196,13 +196,13 @@ pub fn hash(data: &[u8]) -> Hash {
 
 This is a straightforward wrapper around the `sha2` crate. We will use it in our examples when we need to produce hashes that are *not* tree leaves (for example, when simulating tampered data).
 
-A note on the choice of hash function: a Merkle tree can in principle be built with any cryptographic hash function, but **SHA-256** is by far the most common choice. [Bitcoin](https://bitcoin.org/bitcoin.pdf) uses it, Certificate Transparency ([RFC 6962](https://www.rfc-editor.org/rfc/rfc6962)) mandates it, and [IPFS](https://github.com/ipfs/specs/blob/main/UNIXFS.md) supports it as the default. Its popularity in Merkle tree implementations comes down to a combination of properties: a 256-bit output that is large enough to make collisions computationally infeasible (finding two inputs that hash to the same output would require on the order of 2¹²⁸ operations — not 2²⁵⁶, because of the [birthday paradox](https://en.wikipedia.org/wiki/Birthday_attack): when you are looking for *any* pair that collides rather than a match against a specific target, the probability grows much faster, analogous to how in a room of just 23 people there is a >50% chance that *some* two share a birthday out of 365 possible), strong resistance to preimage attacks (given a hash, finding *any* input that produces it requires the full 2²⁵⁶ operations), and the avalanche effect (flipping a single input bit changes roughly half the output bits, which is what makes the change-detection cascade through tree levels possible). SHA-256 is also fast enough for practical use while being well-studied and battle-tested over two decades, with no known practical weaknesses. Our implementation uses SHA-256 throughout, but the tree construction and proof logic are hash-agnostic — swapping in a different function (say, BLAKE3 or SHA-3) would only require changing the leaf and pair hashing functions.
+A note on the choice of hash function: a Merkle tree can in principle be built with any cryptographic hash function, but **SHA-256** is by far the most common choice. [Bitcoin](https://bitcoin.org/bitcoin.pdf) uses it, Certificate Transparency ([RFC 6962](https://www.rfc-editor.org/rfc/rfc6962)) mandates it, and [IPFS](https://github.com/ipfs/specs/blob/main/UNIXFS.md) supports it as the default. Its popularity in Merkle tree implementations comes down to a combination of properties: a 256-bit output that is large enough to make collisions computationally infeasible (finding two inputs that hash to the same output would require on the order of 2¹²⁸ operations (not 2²⁵⁶, because of the [birthday paradox](https://en.wikipedia.org/wiki/Birthday_attack): when you are looking for *any* pair that collides rather than a match against a specific target, the probability grows much faster, analogous to how in a room of just 23 people there is a >50% chance that *some* two share a birthday out of 365 possible)), strong resistance to preimage attacks (given a hash, finding *any* input that produces it requires the full 2²⁵⁶ operations), and the avalanche effect (flipping a single input bit changes roughly half the output bits, which is what makes the change-detection cascade through tree levels possible). SHA-256 is also fast enough for practical use while being well-studied and battle-tested over two decades, with no known practical weaknesses. Our implementation uses SHA-256 throughout, but the tree construction and proof logic are hash-agnostic: swapping in a different function (say, BLAKE3 or SHA-3) would only require changing the leaf and pair hashing functions.
 
 ## Domain separation: a subtle but important detail
 
 There is a security concern that is easy to overlook. Consider what happens if leaf data and internal node data are hashed the same way. An attacker could potentially craft leaf data that, when hashed, produces the same bytes as a legitimate internal node hash. This is known as a [**second-preimage attack**](https://en.wikipedia.org/wiki/Merkle_tree#Second_preimage_attack) on the tree structure.
 
-Why is this dangerous? Suppose an attacker constructs a leaf whose raw bytes happen to equal the concatenation of two other hashes — say, `H0 ‖ H1`. If leaves and internal nodes are hashed identically, this fake leaf would produce the same hash as the internal node `H01`. The attacker could then present a shorter, fabricated tree — one with fewer real items — that has the same root hash as the original. A verifier comparing roots would see a match and accept the forged tree as authentic, even though it contains completely different data. In a blockchain context, this would mean an attacker could trick a light client into accepting a block with a different set of transactions than the one miners actually committed to.
+Why is this dangerous? Suppose an attacker constructs a leaf whose raw bytes happen to equal the concatenation of two other hashes — say, `H0 ‖ H1`. If leaves and internal nodes are hashed identically, this fake leaf would produce the same hash as the internal node `H01`. The attacker could then present a shorter, fabricated tree, one with fewer real items, that has the same root hash as the original. A verifier comparing roots would see a match and accept the forged tree as authentic, even though it contains completely different data. In a blockchain context, this would mean an attacker could trick a light client into accepting a block with a different set of transactions than the one miners actually committed to.
 
 The solution, standardized in [RFC 6962](https://www.rfc-editor.org/rfc/rfc6962) (Certificate Transparency), is **domain separation**: prefix leaf hashes with a `0x00` byte and internal node hashes with a `0x01` byte. This ensures that a leaf hash and an internal node hash can never collide, even if the underlying data happens to be identical.
 
@@ -238,7 +238,7 @@ fn hash_pair(left: &Hash, right: &Hash) -> Hash {
 }
 ```
 
-Notice that `hash_leaf` is public — consumers of the library need it to compute leaf hashes for proof lookup (for example, to verify that downloaded content matches a proof's leaf hash). In contrast, `hash_pair` is private: it is only used internally during tree construction and proof verification. There is no reason for external code to pair arbitrary hashes.
+Notice that `hash_leaf` is public: consumers of the library need it to compute leaf hashes for proof lookup (for example, to verify that downloaded content matches a proof's leaf hash). In contrast, `hash_pair` is private: it is only used internally during tree construction and proof verification. There is no reason for external code to pair arbitrary hashes.
 
 A small prefix, but it closes a real attack vector. It is a good reminder that in cryptographic constructions, the details that seem trivial are often the ones that matter most.
 
@@ -277,7 +277,7 @@ pub struct MerkleTree {
 }
 ```
 
-Why store all levels? It is a deliberate trade-off. Storing only the root would be sufficient if we only ever needed to verify proofs, but we also need to *generate* proofs. Proof generation requires walking from a leaf upward through the tree, collecting the sibling hash at each level. Having all levels in memory makes this straightforward. The space overhead is acceptable: for *n* leaves, the total number of hashes across all levels is roughly *2n* (a geometric series that converges to 2n), so we use about twice the space of just the leaves. For a tree with a million SHA-256 leaves, that is about 64 MB — entirely reasonable.
+Why store all levels? It is a deliberate trade-off. Storing only the root would be sufficient if we only ever needed to verify proofs, but we also need to *generate* proofs. Proof generation requires walking from a leaf upward through the tree, collecting the sibling hash at each level. Having all levels in memory makes this straightforward. The space overhead is acceptable: for *n* leaves, the total number of hashes across all levels is roughly *2n* (a geometric series that converges to 2n), so we use about twice the space of just the leaves. For a tree with a million SHA-256 leaves, that is about 64 MB, entirely reasonable.
 
 The `build` method constructs the tree bottom-up:
 
@@ -362,7 +362,7 @@ pub fn get_leaf_hash(&self, index: usize) -> Option<&Hash> {
 }
 ```
 
-Note the bounds check in `get_leaf_hash`: it uses `self.leaf_count` rather than the leaf level's length. This is important because the leaf level may contain duplicated entries (when the original number of leaves was odd). We do not want to expose those duplicates to callers — they are an internal implementation detail.
+Note the bounds check in `get_leaf_hash`: it uses `self.leaf_count` rather than the leaf level's length. This is important because the leaf level may contain duplicated entries (when the original number of leaves was odd). We do not want to expose those duplicates to callers: they are an internal implementation detail.
 
 ## Handling odd numbers of leaves
 
@@ -468,7 +468,7 @@ The proof for `tx2` contains two hashes: `H3` (the sibling at the leaf level, on
 3. Combine with sibling `H01` (which is on the left): `Root' = hash_pair(H01, H23)`
 4. Check: does `Root'` equal the expected root? If yes, `tx2` is in the tree.
 
-The proof size is **O(log n)**: for a tree with *n* leaves, you need only *⌈log₂(n)⌉* sibling hashes. A tree with a million leaves requires just 20 hashes in the proof — roughly 640 bytes with SHA-256. This is remarkably compact.
+The proof size is **O(log n)**: for a tree with *n* leaves, you need only *⌈log₂(n)⌉* sibling hashes. A tree with a million leaves requires just 20 hashes in the proof, roughly 640 bytes with SHA-256. This is remarkably compact.
 
 The test suite verifies this logarithmic relationship:
 
@@ -581,7 +581,7 @@ fn single_leaf_proof_has_no_steps_and_verifies() -> anyhow::Result<()> {
 
 ## Verifying proofs: a fold over the path
 
-Verification is the elegant counterpart to generation. Starting from the leaf hash, we combine it with each sibling in the proof — respecting the recorded direction — until we reach the root:
+Verification is the elegant counterpart to generation. Starting from the leaf hash, we combine it with each sibling in the proof, respecting the recorded direction, until we reach the root:
 
 ```rust
 impl Proof {
@@ -639,7 +639,7 @@ fn every_leaf_proof_verifies_against_root() -> anyhow::Result<()> {
 }
 ```
 
-And it also verifies the tamper-detection properties. Changing *any* part of the proof — a sibling hash, the leaf hash, or even the direction of a sibling — causes verification to fail:
+And it also verifies the tamper-detection properties. Changing *any* part of the proof (a sibling hash, the leaf hash, or even the direction of a sibling) causes verification to fail:
 
 ```rust
 #[test]
@@ -679,11 +679,11 @@ fn flipped_sibling_direction_invalidates_proof() -> anyhow::Result<()> {
 }
 ```
 
-The direction test is particularly interesting. It confirms that `hash_pair` is not commutative: swapping the order of arguments produces a completely different hash. This is by design — it prevents an attacker from rearranging siblings in the proof to forge a valid path.
+The direction test is particularly interesting. It confirms that `hash_pair` is not commutative: swapping the order of arguments produces a completely different hash. This is by design: it prevents an attacker from rearranging siblings in the proof to forge a valid path.
 
 ## Blockchain verification with SPV
 
-Now that we understand how Merkle trees work at a fundamental level — the data structures, the construction, proof generation, and verification — we can see why they are so valuable in blockchain systems. The logarithmic proof size is exactly what makes **Simplified Payment Verification (SPV)** possible. SPV was described in [Section 7 of the Bitcoin whitepaper](https://bitcoin.org/bitcoin.pdf) and is the reason lightweight wallets can function without storing the entire blockchain.
+Now that we understand how Merkle trees work at a fundamental level (the data structures, the construction, proof generation, and verification), we can see why they are so valuable in blockchain systems. The logarithmic proof size is exactly what makes **Simplified Payment Verification (SPV)** possible. SPV was described in [Section 7 of the Bitcoin whitepaper](https://bitcoin.org/bitcoin.pdf) and is the reason lightweight wallets can function without storing the entire blockchain.
 
 ![SPV architecture: full node vs light node]({{ site.baseurl }}/assets/images/merkle-trees/spv-architecture.svg)
 
@@ -765,7 +765,7 @@ impl FullNode {
 
 The `Block::new` constructor builds the Merkle tree at block creation time. Each transaction is serialised to bytes, and those byte slices become the leaves. The full node can then generate proofs for any transaction by index.
 
-The light node stores only block headers — the minimal metadata needed for verification:
+The light node stores only block headers, the minimal metadata needed for verification:
 
 ```rust
 /// The minimal per-block metadata a light client needs: the block
@@ -779,7 +779,7 @@ struct BlockHeader {
     merkle_root: merkle_tree::Hash,
 }
 
-/// A light node stores only block headers — no full transaction lists.
+/// A light node stores only block headers, no full transaction lists.
 struct LightNode {
     headers: Vec<BlockHeader>,
 }
@@ -806,9 +806,9 @@ impl LightNode {
     /// Verify that `tx_data` is an authentic transaction included in `block_id`.
     ///
     /// Two checks are needed:
-    /// 1. `hash_leaf(tx_data) == proof.leaf` — the transaction bytes match the
+    /// 1. `hash_leaf(tx_data) == proof.leaf`: the transaction bytes match the
     ///    hash claimed by the proof.
-    /// 2. `proof.verify(&merkle_root)` — the leaf hash chains up through
+    /// 2. `proof.verify(&merkle_root)`: the leaf hash chains up through
     ///    sibling hashes to the trusted Merkle root.
     ///
     /// Without the first check, a malicious full node could supply a valid
@@ -823,7 +823,7 @@ impl LightNode {
 }
 ```
 
-Notice the two-step verification in the light node, mirroring the pattern we will see in the [file integrity example](#beyond-blockchains). The first check (`hash_leaf(tx_data) == proof.leaf`) ensures the transaction the client cares about actually matches the leaf hash claimed by the proof. The second check (`proof.verify(&merkle_root)`) ensures the leaf hash chains up to the trusted Merkle root. Both are necessary: without the first check, a malicious full node could supply a valid proof for a *different* transaction — one that genuinely exists in the block — and the light node would accept it, believing the wrong transaction was verified. Without the second check, there would be no chain of trust back to the known-good root. All the cryptographic heavy lifting happens inside the proof's `compute_root` method, which we already examined in detail. Note that this computation does run on the light node itself — but since it only processes O(log n) hashes rather than the entire block, it remains very efficient.
+Notice the two-step verification in the light node, mirroring the pattern we will see in the [file integrity example](#beyond-blockchains). The first check (`hash_leaf(tx_data) == proof.leaf`) ensures the transaction the client cares about actually matches the leaf hash claimed by the proof. The second check (`proof.verify(&merkle_root)`) ensures the leaf hash chains up to the trusted Merkle root. Both are necessary: without the first check, a malicious full node could supply a valid proof for a *different* transaction, one that genuinely exists in the block, and the light node would accept it, believing the wrong transaction was verified. Without the second check, there would be no chain of trust back to the known-good root. All the cryptographic heavy lifting happens inside the proof's `compute_root` method, which we already examined in detail. Note that this computation does run on the light node itself, but since it only processes O(log n) hashes rather than the entire block, it remains very efficient.
 
 Now let's set up a scenario with two blocks of transactions and walk through three security scenarios:
 
@@ -870,7 +870,7 @@ let verified = light_node.verify("block-1", &tx_data, &proof);
 // verified == true
 ```
 
-For a block with 5 transactions, the proof contains just 3 hashes (⌈log₂(5)⌉ = 3), regardless of how many transactions the block contains. In Bitcoin, which can have several thousand transactions per block, a proof is still only around 10-12 hashes — about 320-384 bytes.
+For a block with 5 transactions, the proof contains just 3 hashes (⌈log₂(5)⌉ = 3), regardless of how many transactions the block contains. In Bitcoin, which can have several thousand transactions per block, a proof is still only around 10-12 hashes, about 320-384 bytes.
 
 ### Scenario 2: Tamper detection
 
@@ -944,9 +944,9 @@ impl Client {
     /// Verify that `data` is an authentic file from the release.
     ///
     /// Two checks are needed:
-    /// 1. hash_leaf(data) == proof.leaf — the downloaded bytes match the
+    /// 1. hash_leaf(data) == proof.leaf: the downloaded bytes match the
     ///    hash claimed by the proof.
-    /// 2. proof.verify(&trusted_root) — the leaf hash chains up through
+    /// 2. proof.verify(&trusted_root): the leaf hash chains up through
     ///    sibling hashes to the trusted root.
     fn verify(&self, data: &[u8], proof: &merkle_tree::Proof) -> bool {
         merkle_tree::hash_leaf(data) == proof.leaf && proof.verify(&self.trusted_root)
@@ -1001,7 +1001,7 @@ impl Replica {
 }
 ```
 
-The first step — comparing root hashes — already saves work: if the roots match, the replicas are identical and no further comparison is needed. When they differ, the example above takes a simplified approach and compares leaf hashes directly. This is fine for small datasets, but in a real system with millions of records it would defeat the purpose: you would be comparing every record's hash even if only a handful differ. Production systems like Cassandra instead walk the tree **level by level**: start at the roots, compare children, and recurse only into subtrees whose hashes differ — skipping entire subtrees whose roots match. If two replicas with a million records have only 10 divergent records, the traversal touches roughly O(10 × log n) nodes instead of all n. Only those 10 records need to be transferred. This is the same logarithmic principle that makes inclusion proofs efficient, applied to synchronization rather than verification.
+The first step, comparing root hashes, already saves work: if the roots match, the replicas are identical and no further comparison is needed. When they differ, the example above takes a simplified approach and compares leaf hashes directly. This is fine for small datasets, but in a real system with millions of records it would defeat the purpose: you would be comparing every record's hash even if only a handful differ. Production systems like Cassandra instead walk the tree **level by level**: start at the roots, compare children, and recurse only into subtrees whose hashes differ, skipping entire subtrees whose roots match. If two replicas with a million records have only 10 divergent records, the traversal touches roughly O(10 × log n) nodes instead of all n. Only those 10 records need to be transferred. This is the same logarithmic principle that makes inclusion proofs efficient, applied to synchronization rather than verification.
 
 **Certificate Transparency.** Google's Certificate Transparency framework uses Merkle trees to create an append-only log of TLS certificates. Monitors can efficiently verify that a certificate was logged, and auditors can verify that the log is consistent (no entries were removed or altered). This is the same RFC 6962 that standardized domain separation.
 
@@ -1011,7 +1011,7 @@ Merkle trees solve a fundamental problem in distributed systems: how to verify t
 
 - **A single root hash summarizes arbitrarily large data.** Any change to any leaf propagates up and alters the root. This gives us tamper evidence.
 - **Inclusion proofs are logarithmic.** Verifying one leaf out of a million requires only 20 hashes. This makes verification practical even for resource-constrained clients.
-- **Verification is trustless.** The verifier needs only the root hash from a trusted source. Everything else — the proof data, the full node providing it — can be untrusted. The math either checks out or it does not.
+- **Verification is trustless.** The verifier needs only the root hash from a trusted source. Everything else (the proof data, the full node providing it) can be untrusted. The math either checks out or it does not.
 
 These properties explain why Merkle trees appear everywhere: Bitcoin and Ethereum for transaction verification, IPFS for content addressing, Certificate Transparency for auditing TLS certificates, Cassandra and DynamoDB for replica synchronization, Git for content-addressable storage, and many more.
 
