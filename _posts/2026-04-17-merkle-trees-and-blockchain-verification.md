@@ -2,6 +2,8 @@
 layout: default
 title: "Merkle Trees and Blockchain Verification"
 date: 2026-04-17
+description: "Merkle trees let you prove a single item belongs to a large dataset without transmitting the whole thing — the foundation of blockchain SPV, file-integrity checks, and database sync. A deep dive with Rust implementations."
+image: /assets/images/merkle-trees/og-preview.png
 ---
 
 # Merkle Trees and Blockchain Verification
@@ -801,17 +803,27 @@ impl LightNode {
         Ok(Self { headers })
     }
 
-    /// Verify a transaction proof against the stored root for `block_id`.
-    fn verify(&self, block_id: &str, proof: &Proof) -> bool {
-        self.headers
-            .iter()
-            .find(|h| h.id == block_id)
-            .is_some_and(|h| proof.verify(&h.merkle_root))
+    /// Verify that `tx_data` is an authentic transaction included in `block_id`.
+    ///
+    /// Two checks are needed:
+    /// 1. `hash_leaf(tx_data) == proof.leaf` — the transaction bytes match the
+    ///    hash claimed by the proof.
+    /// 2. `proof.verify(&merkle_root)` — the leaf hash chains up through
+    ///    sibling hashes to the trusted Merkle root.
+    ///
+    /// Without the first check, a malicious full node could supply a valid
+    /// proof for a *different* transaction and the light node would accept it.
+    fn verify(&self, block_id: &str, tx_data: &[u8], proof: &Proof) -> bool {
+        merkle_tree::hash_leaf(tx_data) == proof.leaf
+            && self.headers
+                .iter()
+                .find(|h| h.id == block_id)
+                .is_some_and(|h| proof.verify(&h.merkle_root))
     }
 }
 ```
 
-Notice how thin the light node's `verify` method is: look up the block header, call `proof.verify()` against its Merkle root. All the cryptographic heavy lifting happens inside the proof's `compute_root` method, which we already examined in detail.
+Notice the two-step verification in the light node, mirroring the pattern we will see in the [file integrity example](#beyond-blockchains). The first check (`hash_leaf(tx_data) == proof.leaf`) ensures the transaction the client cares about actually matches the leaf hash claimed by the proof. The second check (`proof.verify(&merkle_root)`) ensures the leaf hash chains up to the trusted Merkle root. Both are necessary: without the first check, a malicious full node could supply a valid proof for a *different* transaction — one that genuinely exists in the block — and the light node would accept it, believing the wrong transaction was verified. Without the second check, there would be no chain of trust back to the known-good root. All the cryptographic heavy lifting happens inside the proof's `compute_root` method, which we already examined in detail. Note that this computation does run on the light node itself — but since it only processes O(log n) hashes rather than the entire block, it remains very efficient.
 
 Now let's set up a scenario with two blocks of transactions and walk through three security scenarios:
 
@@ -852,7 +864,9 @@ let proof = full_node
     .proof_for("block-1", 2)
     .expect("transaction exists in block");
 
-let verified = light_node.verify("block-1", &proof);
+// The light node must know the transaction it wants to verify.
+let tx_data = Transaction { from: "0xCarol".into(), to: "0xDave".into(), value: 10 }.to_bytes();
+let verified = light_node.verify("block-1", &tx_data, &proof);
 // verified == true
 ```
 
@@ -866,7 +880,7 @@ An attacker intercepts the proof and modifies one of the sibling hashes, hoping 
 let mut tampered_proof = proof.clone();
 tampered_proof.steps[0].hash = merkle_tree::hash(b"tampered-data");
 
-let tampered_verified = light_node.verify("block-1", &tampered_proof);
+let tampered_verified = light_node.verify("block-1", &tx_data, &tampered_proof);
 // tampered_verified == false
 ```
 
@@ -881,10 +895,11 @@ let block_b_proof = full_node
     .proof_for("block-2", 0)
     .expect("transaction exists in block-2");
 
-let cross_verified = light_node.verify("block-1", &block_b_proof);
+let block_b_tx_data = Transaction { from: "0xEve".into(), to: "0xAlice".into(), value: 100 }.to_bytes();
+let cross_verified = light_node.verify("block-1", &block_b_tx_data, &block_b_proof);
 // cross_verified == false
 
-let own_block_verified = light_node.verify("block-2", &block_b_proof);
+let own_block_verified = light_node.verify("block-2", &block_b_tx_data, &block_b_proof);
 // own_block_verified == true
 ```
 
@@ -894,7 +909,7 @@ This ensures that transactions cannot be "moved" between blocks by a malicious f
 
 While blockchains are perhaps the most well-known application, Merkle trees appear in many other systems where data integrity and efficient verification matter.
 
-**File distribution and software updates.** Systems like IPFS split files into chunks and organize them into a Merkle DAG (a generalization of Merkle trees). The root hash serves as the content address. A client downloading chunks from untrusted peers can verify each chunk against the root without trusting any single peer. The same principle applies to package managers and firmware update systems: publish a signed root hash, and clients can verify individual files independently.
+**File distribution and software updates.** Systems like [IPFS](https://ipfs.tech/) split files into chunks and organize them into a Merkle DAG (a generalization of Merkle trees). The root hash serves as the content address. A client downloading chunks from untrusted peers can verify each chunk against the root without trusting any single peer. The same principle applies to package managers and firmware update systems: publish a signed root hash, and clients can verify individual files independently.
 
 The pattern is the same one we saw with blockchains. A server holds the full file set and its Merkle tree. A client needs only the trusted root hash. For each file it downloads, it receives a compact proof. Here is a simplified version from the implementation's `file_integrity` example:
 
@@ -986,7 +1001,7 @@ impl Replica {
 }
 ```
 
-This is far more efficient than comparing every record: if two replicas with 8 records have only 2 divergent records, only those 2 need to be transferred. In a real system with millions of records, the savings are enormous — the traversal focuses only on the divergent branches, skipping entire subtrees whose roots match.
+The first step — comparing root hashes — already saves work: if the roots match, the replicas are identical and no further comparison is needed. When they differ, the example above takes a simplified approach and compares leaf hashes directly. This is fine for small datasets, but in a real system with millions of records it would defeat the purpose: you would be comparing every record's hash even if only a handful differ. Production systems like Cassandra instead walk the tree **level by level**: start at the roots, compare children, and recurse only into subtrees whose hashes differ — skipping entire subtrees whose roots match. If two replicas with a million records have only 10 divergent records, the traversal touches roughly O(10 × log n) nodes instead of all n. Only those 10 records need to be transferred. This is the same logarithmic principle that makes inclusion proofs efficient, applied to synchronization rather than verification.
 
 **Certificate Transparency.** Google's Certificate Transparency framework uses Merkle trees to create an append-only log of TLS certificates. Monitors can efficiently verify that a certificate was logged, and auditors can verify that the log is consistent (no entries were removed or altered). This is the same RFC 6962 that standardized domain separation.
 
@@ -997,7 +1012,6 @@ Merkle trees solve a fundamental problem in distributed systems: how to verify t
 - **A single root hash summarizes arbitrarily large data.** Any change to any leaf propagates up and alters the root. This gives us tamper evidence.
 - **Inclusion proofs are logarithmic.** Verifying one leaf out of a million requires only 20 hashes. This makes verification practical even for resource-constrained clients.
 - **Verification is trustless.** The verifier needs only the root hash from a trusted source. Everything else — the proof data, the full node providing it — can be untrusted. The math either checks out or it does not.
-- **Domain separation prevents structural attacks.** The simple technique of prefixing leaf and internal node hashes with different bytes prevents a class of attacks where crafted leaf data could masquerade as internal nodes.
 
 These properties explain why Merkle trees appear everywhere: Bitcoin and Ethereum for transaction verification, IPFS for content addressing, Certificate Transparency for auditing TLS certificates, Cassandra and DynamoDB for replica synchronization, Git for content-addressable storage, and many more.
 
