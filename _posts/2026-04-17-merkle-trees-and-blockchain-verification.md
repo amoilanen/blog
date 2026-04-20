@@ -1018,3 +1018,14 @@ These properties explain why Merkle trees appear everywhere: Bitcoin and Ethereu
 Ralph Merkle patented the hash tree in 1979. Nearly fifty years later, it remains one of the most practically important ideas in computer science: a simple construction with profound consequences for how we build systems that operate without mutual trust.
 
 The full Rust implementation discussed in this post, including the blockchain verification, file integrity, and database sync examples, is available at [github.com/amoilanen/merkle-tree](https://github.com/amoilanen/merkle-tree).
+
+**A note on production readiness.** The implementation in this post is designed for demonstration and educational purposes. It prioritizes clarity over production hardness. While it gets the important things right - domain-separated hashing per RFC 6962, correct proof generation and verification, and a comprehensive test suite - it has several limitations you should be aware of before using it in real systems:
+
+- The **Bitcoin-style odd-leaf duplication** is susceptible to [CVE-2012-2459](https://bitcointalk.org/?topic=102395), where two different transaction lists can produce the same Merkle root. Production implementations should either carry the odd node up without duplication (as RFC 6962 specifies) or use a sentinel hash for padding.
+- **Hash comparison is not constant-time**, which could leak timing information in contexts where proof verification timing is observable. Production crypto code should use constant-time equality (e.g. `subtle::ConstantTimeEq`).
+- **Proof generation performs a linear scan** of the leaf level to find the target hash, making it O(n) rather than the O(log n) achievable by accepting a leaf index directly.
+- There is **no incremental update support** - adding or removing a leaf requires rebuilding the entire tree from scratch.
+- There is **no serialization/deserialization** - proofs and trees cannot be transmitted over a network or persisted to disk without custom code.
+- **All intermediate levels are stored in memory**, using roughly 64n bytes for n leaves, rather than recomputing on demand.
+
+For production use cases, consider established and audited libraries such as [`rs_merkle`](https://crates.io/crates/rs_merkle). The implementation here is best suited for learning how Merkle trees work and experimenting with the concepts discussed in this post.
