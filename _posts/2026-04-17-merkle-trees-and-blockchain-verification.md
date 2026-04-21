@@ -6,8 +6,6 @@ description: "Merkle trees let you prove a single item belongs to a large datase
 image: /assets/images/merkle-trees/og-preview.png
 ---
 
-# Merkle Trees and Blockchain Verification
-
 ## Contents
 
 - [Introducing Merkle trees](#introducing-merkle-trees)
